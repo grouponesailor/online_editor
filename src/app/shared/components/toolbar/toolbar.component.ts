@@ -297,6 +297,39 @@ export class ToolbarComponent implements OnChanges {
       .run();
   }
 
+  // File operations
+  onNewDocument() {
+    if (confirm('Create a new document? Any unsaved changes will be lost.')) {
+      window.location.href = '/documents/new';
+    }
+  }
+
+  onOpenDocument() {
+    // Navigate to file manager
+    window.location.href = '/file/manager';
+  }
+
+  onSaveDocument() {
+    // Trigger save event
+    console.log('Save document');
+  }
+
+  onExportPDF() {
+    console.log('Export as PDF');
+  }
+
+  onExportWord() {
+    console.log('Export as Word');
+  }
+
+  onPrint() {
+    window.print();
+  }
+
+  openRecentDocuments() {
+    window.location.href = '/file/manager';
+  }
+
   // Share functionality
   toggleShareDialog() {
     this.showShareDialog = !this.showShareDialog;
