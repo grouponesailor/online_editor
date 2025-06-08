@@ -25,7 +25,31 @@ export class FileToolbarComponent {
   }
 
   onNewDocument() {
-    this.newDocument.emit();
+    // First save the current document
+    this.saveCurrentDocument();
+    
+    // Then create a new document
+    this.fileService.createNewDocument().subscribe(
+      (newDocument: any) => {
+        this.showSaveNotification('Current document saved. Creating new document...');
+        
+        // Navigate to the new document after a short delay
+        setTimeout(() => {
+          window.location.href = `/editor/${newDocument.id}`;
+        }, 1000);
+      },
+      (error: any) => {
+        console.error('Failed to create new document:', error);
+        this.showSaveNotification('Failed to create new document', 'error');
+      }
+    );
+  }
+
+  private saveCurrentDocument() {
+    if (this.documentId) {
+      // Save the current document before creating a new one
+      this.saveDocumentLocally();
+    }
   }
 
   onOpenDocument() {
@@ -66,7 +90,9 @@ export class FileToolbarComponent {
     setTimeout(() => {
       notification.style.opacity = '0';
       setTimeout(() => {
-        document.body.removeChild(notification);
+        if (document.body.contains(notification)) {
+          document.body.removeChild(notification);
+        }
       }, 300);
     }, 3000);
   }
@@ -98,10 +124,11 @@ export class FileToolbarComponent {
         this.fileService.uploadFile(file).subscribe(
           (response: any) => {
             console.log('File uploaded successfully:', response);
-            // Handle successful upload
+            this.showSaveNotification('File uploaded successfully');
           },
           (error: any) => {
             console.error('File upload failed:', error);
+            this.showSaveNotification('File upload failed', 'error');
           }
         );
       }
