@@ -1,0 +1,125 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom styles */
+.tiptap {
+  @apply min-h-[200px] p-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500;
+}
+
+.tiptap p.is-editor-empty:first-child::before {
+  @apply text-gray-400;
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+/* Tables */
+.tiptap table {
+  @apply w-full border-collapse my-4;
+}
+
+.tiptap td,
+.tiptap th {
+  @apply border-2 border-gray-300 p-2 relative;
+  min-width: 1em;
+}
+
+.tiptap th {
+  @apply bg-gray-50 font-semibold;
+}
+
+/* Task lists */
+.tiptap ul[data-type="taskList"] {
+  @apply list-none p-0;
+}
+
+.tiptap ul[data-type="taskList"] li {
+  @apply flex items-start gap-2 my-1;
+}
+
+.tiptap ul[data-type="taskList"] li > label {
+  @apply mt-1;
+}
+
+.tiptap ul[data-type="taskList"] li > div {
+  @apply flex-1;
+}
+
+/* Code blocks */
+.tiptap pre {
+  @apply bg-gray-900 text-white rounded-lg p-4 my-4 overflow-x-auto;
+}
+
+.tiptap code {
+  @apply font-mono text-sm;
+}
+
+/* Images */
+.tiptap img {
+  @apply max-w-full h-auto rounded-lg my-4;
+}
+
+.tiptap img.ProseMirror-selectednode {
+  @apply outline-2 outline-blue-500 outline;
+}
+
+/* Text alignment */
+.tiptap [data-text-align='left'] {
+  text-align: left;
+}
+
+.tiptap [data-text-align='center'] {
+  text-align: center;
+}
+
+.tiptap [data-text-align='right'] {
+  text-align: right;
+}
+
+.tiptap [data-text-align='justify'] {
+  text-align: justify;
+}
+
+/* Collaboration cursors */
+.collaboration-cursor__caret {
+  @apply border-l-2 border-current h-[1.2em] relative -left-[1px] -top-[2px] mx-[-.5px];
+}
+
+.collaboration-cursor__label {
+  @apply text-xs text-white rounded px-1.5 py-0.5 font-semibold;
+  position: absolute;
+  top: -1.4em;
+  left: -1px;
+  white-space: nowrap;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* Headings */
+.tiptap h1 {
+  @apply text-4xl font-bold mb-4 mt-6;
+}
+
+.tiptap h2 {
+  @apply text-3xl font-bold mb-3 mt-5;
+}
+
+.tiptap h3 {
+  @apply text-2xl font-bold mb-2 mt-4;
+}
+
+/* Lists */
+.tiptap ul:not([data-type="taskList"]) {
+  @apply list-disc pl-6 my-4;
+}
+
+.tiptap ol {
+  @apply list-decimal pl-6 my-4;
+}
+
+/* Blockquotes */
+.tiptap blockquote {
+  @apply border-l-4 border-gray-300 pl-4 italic my-4;
+} 

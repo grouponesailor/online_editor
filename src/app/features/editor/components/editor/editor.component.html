@@ -1,0 +1,86 @@
+<div class="h-screen flex flex-col">
+  <!-- Header -->
+  <div class="flex-shrink-0 bg-white border-b px-4 py-2">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center space-x-4">
+        <input
+          type="text"
+          [(ngModel)]="documentName"
+          (blur)="saveDocumentName()"
+          (keyup.enter)="saveDocumentName()"
+          class="text-lg font-medium bg-transparent border-none focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-2 py-1"
+          placeholder="Document name">
+        
+        <div class="flex items-center text-sm text-gray-600">
+          <i [class]="getNetworkIcon()" class="mr-2"></i>
+          <span>{{ getNetworkStatusText() }}</span>
+          <button 
+            (click)="refreshConnection()" 
+            class="ml-2 text-blue-600 hover:text-blue-800"
+            title="Refresh connection">
+            <i class="fas fa-sync-alt"></i>
+          </button>
+        </div>
+      </div>
+      
+      <div class="flex items-center space-x-4">
+        <div *ngIf="collaborators.length > 0" class="flex items-center text-sm text-gray-600">
+          <i class="fas fa-users mr-2"></i>
+          <span>{{ collaborators.length + 1 }} collaborator{{ collaborators.length > 0 ? 's' : '' }}</span>
+        </div>
+        
+        <div *ngIf="lastSaved" class="text-sm text-gray-500">
+          Last saved: {{ lastSaved | date:'short' }}
+        </div>
+        
+        <div *ngIf="hasOfflineChanges" class="text-sm text-orange-600">
+          <i class="fas fa-exclamation-triangle mr-1"></i>
+          Offline changes
+        </div>
+        
+        <button
+          (click)="openShareDialog()"
+          class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">
+          Share
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <app-toolbar 
+    [editor]="editor" 
+    [documentId]="documentId"
+    class="flex-shrink-0">
+  </app-toolbar>
+
+  <!-- Editor Container -->
+  <div class="flex flex-1 overflow-hidden">
+    <!-- Editor -->
+    <div class="flex-1 flex flex-col">
+      <div class="flex-1 overflow-auto p-4">
+        <div class="max-w-4xl mx-auto">
+          <div 
+            #editorElement
+            class="prose prose-lg max-w-none focus:outline-none min-h-96 bg-white p-8 shadow-sm border rounded-lg">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Comments Sidebar -->
+    <app-comments-sidebar 
+      *ngIf="editor"
+      [editor]="editor"
+      class="flex-shrink-0 w-80 border-l bg-gray-50">
+    </app-comments-sidebar>
+  </div>
+
+  <!-- Share Dialog -->
+  <app-share-dialog
+    *ngIf="showShareDialog"
+    [documentId]="documentId"
+    [documentUrl]="'http://localhost:4200/documents/' + documentId"
+    (close)="showShareDialog = false">
+  </app-share-dialog>
+</div> 

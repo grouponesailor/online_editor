@@ -1,0 +1,247 @@
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+  <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4">
+    <div class="p-4 border-b flex justify-between items-center">
+      <h2 class="text-xl font-semibold">Share Document</h2>
+      <button class="text-gray-500 hover:text-gray-700" (click)="close.emit()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <div class="p-4">
+      <!-- Document Name -->
+      <div class="mb-6">
+        <div class="flex items-center gap-2 mb-2">
+          <i class="fas fa-file-alt text-gray-500"></i>
+          <h3 class="font-medium">Document Name</h3>
+        </div>
+        <input
+          type="text"
+          [(ngModel)]="documentName"
+          (blur)="updateDocumentName()"
+          placeholder="Enter document name..."
+          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        />
+      </div>
+
+      <!-- Share Link -->
+      <div class="mb-6">
+        <div class="flex items-center gap-2 mb-2">
+          <i class="fas fa-link text-gray-500"></i>
+          <h3 class="font-medium">Share via link</h3>
+        </div>
+        <div class="space-y-3">
+          <select
+            [(ngModel)]="settings.access"
+            (ngModelChange)="updateSettings()"
+            class="w-full rounded border-gray-300 shadow-sm">
+            <option value="private">Restricted - Only people you invite</option>
+            <option value="restricted">Anyone with the link can view</option>
+            <option value="public">Public - Anyone can find and view</option>
+          </select>
+          
+          <!-- Generated Links -->
+          <div class="space-y-2">
+            <div class="flex gap-2">
+              <input
+                [value]="currentShareLink"
+                readonly
+                class="flex-1 px-3 py-2 bg-gray-50 border border-gray-300 rounded text-sm"
+                placeholder="Generating link..."
+              />
+              <button
+                class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                (click)="copyLink()"
+                [disabled]="!currentShareLink">
+                <i class="fas fa-copy mr-1"></i>
+                Copy
+              </button>
+            </div>
+            
+            <!-- Copy Success Message -->
+            <div *ngIf="linkCopied" class="flex items-center gap-2 text-green-600 text-sm animate-fade-in">
+              <i class="fas fa-check-circle"></i>
+              <span>Link copied to clipboard!</span>
+            </div>
+            
+            <!-- QR Code Option -->
+            <div class="flex gap-2">
+              <button
+                class="flex-1 px-3 py-2 border border-gray-300 rounded hover:bg-gray-50 transition-colors"
+                (click)="generateQRCode()"
+                [disabled]="!currentShareLink">
+                <i class="fas fa-qrcode mr-2"></i>
+                Generate QR Code
+              </button>
+              <button
+                class="flex-1 px-3 py-2 border border-gray-300 rounded hover:bg-gray-50 transition-colors"
+                (click)="shareViaEmail()"
+                [disabled]="!currentShareLink">
+                <i class="fas fa-envelope mr-2"></i>
+                Share via Email
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Network Status -->
+      <div class="mb-6 p-3 bg-gray-50 rounded-lg">
+        <div class="flex items-center gap-2 mb-2">
+          <i [class]="getNetworkStatusIcon()"></i>
+          <h3 class="font-medium">Network Status</h3>
+        </div>
+        <div class="text-sm text-gray-600">
+          <div *ngIf="networkStatus === 'online'">
+            ✅ Connected to cloud server: <code class="bg-white px-1 rounded">{{serverInfo}}</code>
+          </div>
+          <div *ngIf="networkStatus === 'on-premise'">
+            🏢 Connected to on-premise server: <code class="bg-white px-1 rounded">{{serverInfo}}</code>
+          </div>
+          <div *ngIf="networkStatus === 'offline'">
+            💾 Working offline - Changes will sync when reconnected
+          </div>
+        </div>
+      </div>
+
+      <!-- Share with People -->
+      <div class="mb-6">
+        <div class="flex items-center gap-2 mb-2">
+          <i class="fas fa-user-plus text-gray-500"></i>
+          <h3 class="font-medium">Share with people</h3>
+        </div>
+        <div class="flex gap-2 mb-4">
+          <input
+            type="text"
+            [(ngModel)]="newUserEmail"
+            placeholder="Add people by email or name"
+            class="flex-1 rounded border-gray-300 shadow-sm"
+          />
+          <select
+            [(ngModel)]="newUserAccess"
+            class="w-32 rounded border-gray-300 shadow-sm">
+            <option value="view">Viewer</option>
+            <option value="comment">Commenter</option>
+            <option value="edit">Editor</option>
+          </select>
+          <button
+            class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            (click)="addUser()"
+            [disabled]="!isValidEmailOrName(newUserEmail)">
+            Add
+          </button>
+        </div>
+
+        <!-- Shared Users List -->
+        <div class="space-y-2 max-h-40 overflow-y-auto">
+          <div *ngFor="let user of sharedUsers" class="flex items-center justify-between p-2 hover:bg-gray-50 rounded">
+            <div class="flex items-center gap-2">
+              <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
+                <img *ngIf="user.avatar" [src]="user.avatar" [alt]="user.name" class="w-8 h-8 rounded-full">
+                <i *ngIf="!user.avatar" class="fas fa-user text-gray-400"></i>
+              </div>
+              <div>
+                <div class="font-medium">{{ user.name || user.email }}</div>
+                <div class="text-sm text-gray-500">{{ user.email }}</div>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <select
+                [(ngModel)]="user.access"
+                (ngModelChange)="updateUserAccess(user)"
+                class="rounded border-gray-300 shadow-sm text-sm">
+                <option value="view">Viewer</option>
+                <option value="comment">Commenter</option>
+                <option value="edit">Editor</option>
+              </select>
+              <button
+                class="p-2 text-gray-500 hover:text-red-500"
+                (click)="removeUser(user)">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </div>
+          <div *ngIf="sharedUsers.length === 0" class="text-center text-gray-500 py-4">
+            No users added yet
+          </div>
+        </div>
+      </div>
+
+      <!-- Advanced Settings -->
+      <div class="border-t pt-4">
+        <div class="flex items-center gap-2 mb-2">
+          <i class="fas fa-cog text-gray-500"></i>
+          <h3 class="font-medium">Advanced Settings</h3>
+        </div>
+        <div class="space-y-2">
+          <label class="flex items-center gap-2">
+            <input
+              type="checkbox"
+              [(ngModel)]="settings.allowEdit"
+              (ngModelChange)="updateSettings()"
+              class="rounded border-gray-300 shadow-sm"
+            />
+            <span class="text-sm">Allow viewers to download and copy</span>
+          </label>
+          <label class="flex items-center gap-2">
+            <input
+              type="checkbox"
+              [(ngModel)]="settings.allowComment"
+              (ngModelChange)="updateSettings()"
+              class="rounded border-gray-300 shadow-sm"
+            />
+            <span class="text-sm">Allow viewers to comment</span>
+          </label>
+          <label class="flex items-center gap-2">
+            <input
+              type="checkbox"
+              [(ngModel)]="settings.allowShare"
+              (ngModelChange)="updateSettings()"
+              class="rounded border-gray-300 shadow-sm"
+            />
+            <span class="text-sm">Allow viewers to share</span>
+          </label>
+          <div class="flex items-center gap-2">
+            <span class="text-sm">Link expires:</span>
+            <input
+              type="date"
+              [(ngModel)]="settings.expirationDate"
+              (ngModelChange)="updateSettings()"
+              class="rounded border-gray-300 shadow-sm text-sm"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="p-4 border-t flex justify-end gap-2">
+      <button
+        class="px-4 py-2 border rounded hover:bg-gray-50"
+        (click)="close.emit()">
+        Cancel
+      </button>
+      <button
+        class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+        (click)="saveChanges()">
+        Done
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- QR Code Modal -->
+<div *ngIf="showQRCode" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-60">
+  <div class="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
+    <div class="text-center">
+      <h3 class="text-lg font-semibold mb-4">QR Code</h3>
+      <div class="flex justify-center mb-4">
+        <div [innerHTML]="qrCodeData" class="w-48 h-48 border"></div>
+      </div>
+      <p class="text-sm text-gray-600 mb-4">Scan this code to open the document</p>
+      <button
+        class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+        (click)="showQRCode = false">
+        Close
+      </button>
+    </div>
+  </div>
+</div> 

@@ -1,0 +1,315 @@
+<div class="bg-white border-b">
+  <!-- Tabs -->
+  <div class="flex border-b">
+    <button
+      *ngFor="let tab of tabs"
+      class="px-4 py-2 flex items-center gap-2 text-sm font-medium"
+      [class.text-blue-600]="currentTab === tab.id"
+      [class.border-b-2]="currentTab === tab.id"
+      [class.border-blue-600]="currentTab === tab.id"
+      (click)="currentTab = tab.id">
+      <i [class]="tab.icon"></i>
+      {{ tab.label }}
+    </button>
+  </div>
+
+  <!-- Home Tab -->
+  <div *ngIf="currentTab === 'home'" class="flex flex-wrap gap-1 p-1">
+    <!-- Clipboard -->
+    <div class="flex gap-1 border-r pr-2">
+      <button
+        class="p-2 rounded hover:bg-gray-100"
+        (click)="handleUndo()"
+        [disabled]="!canUndo()"
+        title="Undo">
+        <i class="fas fa-undo"></i>
+      </button>
+      <button
+        class="p-2 rounded hover:bg-gray-100"
+        (click)="handleRedo()"
+        [disabled]="!canRedo()"
+        title="Redo">
+        <i class="fas fa-redo"></i>
+      </button>
+    </div>
+
+    <!-- Share Button -->
+    <div class="flex gap-1 border-r pr-2">
+      <button
+        class="p-2 rounded hover:bg-gray-100"
+        (click)="toggleShareDialog()"
+        title="Share Document">
+        <i class="fas fa-share-alt"></i>
+      </button>
+    </div>
+
+    <!-- Font -->
+    <div class="flex gap-1 border-r pr-2">
+      <select
+        class="rounded border px-2"
+        (change)="setFontFamily($event)"
+        [value]="currentFontFamily">
+        <option *ngFor="let font of fontFamilies" [value]="font.value">
+          {{ font.label }}
+        </option>
+      </select>
+      <select
+        class="rounded border px-2 w-20"
+        (change)="setFontSize($event)"
+        [value]="currentFontSize">
+        <option *ngFor="let size of fontSizes" [value]="size.value">
+          {{ size.label }}
+        </option>
+      </select>
+    </div>
+
+    <!-- Text Formatting -->
+    <div class="flex gap-1 border-r pr-2">
+      <button
+        *ngFor="let item of textFormatItems"
+        class="p-2 rounded hover:bg-gray-100"
+        [class.bg-gray-200]="editor?.isActive(item.type)"
+        (click)="item.command(editor)"
+        [title]="item.label">
+        <i [class]="item.icon"></i>
+      </button>
+    </div>
+
+    <!-- Alignment -->
+    <div class="flex gap-1 border-r pr-2">
+      <button
+        *ngFor="let item of alignmentItems"
+        class="p-2 rounded hover:bg-gray-100"
+        [class.bg-gray-200]="editor?.isActive({ textAlign: item.align })"
+        (click)="item.command(editor)"
+        [title]="item.label">
+        <i [class]="item.icon"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Insert Tab -->
+  <div *ngIf="currentTab === 'insert'" class="flex flex-wrap gap-1 p-1">
+    <!-- Table -->
+    <div class="flex gap-1 border-r pr-2">
+      <div class="relative">
+        <button
+          class="p-2 rounded hover:bg-gray-100 flex items-center"
+          (click)="showTableMenu = !showTableMenu"
+          title="Insert Table">
+          <i class="fas fa-table"></i>
+          <i class="fas fa-chevron-down ml-1"></i>
+        </button>
+        <div *ngIf="showTableMenu" class="absolute top-full left-0 mt-1 bg-white shadow-lg rounded p-2 z-50">
+          <div class="grid grid-cols-8 gap-1">
+            <button
+              *ngFor="let cell of tableGrid"
+              class="w-6 h-6 border hover:bg-blue-100"
+              [class.bg-blue-200]="cell.selected"
+              (mouseover)="updateTableSelection(cell.row, cell.col)"
+              (click)="insertTable(cell.row, cell.col)">
+            </button>
+          </div>
+          <div class="text-center mt-2 text-sm text-gray-600">
+            {{ tableSelection.row }}x{{ tableSelection.col }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Image -->
+    <div class="flex gap-1 border-r pr-2">
+      <div class="relative">
+        <button
+          class="p-2 rounded hover:bg-gray-100 flex items-center"
+          (click)="showImageMenu = !showImageMenu"
+          title="Insert Image">
+          <i class="fas fa-image"></i>
+          <i class="fas fa-chevron-down ml-1"></i>
+        </button>
+        <div *ngIf="showImageMenu" class="absolute top-full left-0 mt-1 bg-white shadow-lg rounded py-1 z-50 w-48">
+          <button
+            class="block w-full px-4 py-2 text-left hover:bg-gray-100"
+            (click)="uploadImage()">
+            <i class="fas fa-upload mr-2"></i> Upload from computer
+          </button>
+          <button
+            class="block w-full px-4 py-2 text-left hover:bg-gray-100"
+            (click)="insertImageByUrl()">
+            <i class="fas fa-link mr-2"></i> By URL
+          </button>
+          <button
+            class="block w-full px-4 py-2 text-left hover:bg-gray-100"
+            (click)="searchImage()">
+            <i class="fas fa-search mr-2"></i> Search the web
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Shapes Tab -->
+  <div *ngIf="currentTab === 'shapes'" class="p-1">
+    <div class="grid grid-cols-8 gap-2">
+      <button
+        *ngFor="let shape of shapes"
+        class="p-2 border rounded hover:bg-gray-100 shape-preview"
+        (click)="insertShape(shape)"
+        [title]="shape.name">
+        <div class="w-8 h-8" [innerHTML]="sanitizeHTML(shape.svgPath)"></div>
+      </button>
+    </div>
+  </div>
+
+  <!-- Format Tab -->
+  <div *ngIf="currentTab === 'format'" class="flex flex-wrap gap-1 p-1">
+    <!-- Advanced Text -->
+    <div class="flex gap-1 border-r pr-2">
+      <button
+        class="p-2 rounded hover:bg-gray-100"
+        (click)="toggleTextColor()"
+        title="Text Color">
+        <i class="fas fa-font"></i>
+        <i class="fas fa-chevron-down ml-1"></i>
+      </button>
+      <button
+        class="p-2 rounded hover:bg-gray-100"
+        (click)="toggleHighlight()"
+        title="Highlight">
+        <i class="fas fa-highlighter"></i>
+        <i class="fas fa-chevron-down ml-1"></i>
+      </button>
+    </div>
+
+    <!-- Spacing -->
+    <div class="flex gap-1 border-r pr-2">
+      <div class="relative">
+        <button
+          class="p-2 rounded hover:bg-gray-100 flex items-center"
+          (click)="showLineSpacingMenu = !showLineSpacingMenu"
+          title="Line Spacing">
+          <i class="fas fa-align-justify"></i>
+          <i class="fas fa-chevron-down ml-1"></i>
+        </button>
+        <div *ngIf="showLineSpacingMenu" class="absolute top-full left-0 mt-1 bg-white shadow-lg rounded py-1 z-50 w-32">
+          <button
+            class="block w-full px-4 py-2 text-left hover:bg-gray-100"
+            (click)="setLineHeight('1.0')">
+            1.0
+          </button>
+          <button
+            class="block w-full px-4 py-2 text-left hover:bg-gray-100"
+            (click)="setLineHeight('1.5')">
+            1.5
+          </button>
+          <button
+            class="block w-full px-4 py-2 text-left hover:bg-gray-100"
+            (click)="setLineHeight('2.0')">
+            2.0
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tools -->
+    <div class="flex gap-1 border-r pr-2">
+      <button
+        class="p-2 rounded hover:bg-gray-100"
+        [class.bg-gray-200]="formatPainterActive"
+        (click)="toggleFormatPainter()"
+        title="Format Painter">
+        <i class="fas fa-paint-brush"></i>
+      </button>
+    </div>
+
+    <!-- Zoom -->
+    <div class="flex gap-1 pr-2">
+      <button
+        class="p-2 rounded hover:bg-gray-100"
+        (click)="zoomOut()"
+        title="Zoom Out">
+        <i class="fas fa-search-minus"></i>
+      </button>
+      <span class="flex items-center px-2 text-sm">
+        {{ (currentZoom * 100) | number:'1.0-0' }}%
+      </span>
+      <button
+        class="p-2 rounded hover:bg-gray-100"
+        (click)="zoomIn()"
+        title="Zoom In">
+        <i class="fas fa-search-plus"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- View Tab -->
+  <div *ngIf="currentTab === 'view'" class="flex flex-wrap gap-1 p-1">
+    <!-- Layout -->
+    <div class="flex gap-1 border-r pr-2">
+      <button
+        class="p-2 rounded hover:bg-gray-100"
+        title="Print Layout">
+        <i class="fas fa-file-alt"></i>
+      </button>
+      <button
+        class="p-2 rounded hover:bg-gray-100"
+        title="Web Layout">
+        <i class="fas fa-globe"></i>
+      </button>
+    </div>
+
+    <!-- Show -->
+    <div class="flex gap-1 border-r pr-2">
+      <button
+        class="p-2 rounded hover:bg-gray-100"
+        title="Ruler">
+        <i class="fas fa-ruler-horizontal"></i>
+      </button>
+      <button
+        class="p-2 rounded hover:bg-gray-100"
+        title="Gridlines">
+        <i class="fas fa-th"></i>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Text Color Picker -->
+<div *ngIf="showTextColorPicker" class="fixed inset-0 bg-black bg-opacity-25 flex items-center justify-center z-50">
+  <div class="bg-white rounded-lg p-4 shadow-xl">
+    <h3 class="text-lg font-semibold mb-4">Text Color</h3>
+    <input
+      type="color"
+      [(ngModel)]="currentTextColor"
+      (change)="applyTextColor()"
+      class="w-full h-12 rounded border">
+    <div class="flex gap-2 mt-4">
+      <button class="px-4 py-2 bg-gray-200 rounded" (click)="showTextColorPicker = false">Cancel</button>
+      <button class="px-4 py-2 bg-blue-500 text-white rounded" (click)="applyTextColor()">Apply</button>
+    </div>
+  </div>
+</div>
+
+<!-- Highlight Color Picker -->
+<div *ngIf="showHighlightPicker" class="fixed inset-0 bg-black bg-opacity-25 flex items-center justify-center z-50">
+  <div class="bg-white rounded-lg p-4 shadow-xl">
+    <h3 class="text-lg font-semibold mb-4">Highlight Color</h3>
+    <input
+      type="color"
+      [(ngModel)]="currentHighlightColor"
+      (change)="applyHighlight()"
+      class="w-full h-12 rounded border">
+    <div class="flex gap-2 mt-4">
+      <button class="px-4 py-2 bg-gray-200 rounded" (click)="showHighlightPicker = false">Cancel</button>
+      <button class="px-4 py-2 bg-blue-500 text-white rounded" (click)="applyHighlight()">Apply</button>
+    </div>
+  </div>
+</div>
+
+<!-- Image Edit Dialog -->
+<app-image-edit-dialog
+  *ngIf="showImageEditDialog && selectedImage"
+  [selectedImage]="selectedImage"
+  (save)="updateImage($event)"
+  (cancel)="showImageEditDialog = false">
+</app-image-edit-dialog> 
