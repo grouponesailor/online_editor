@@ -874,4 +874,13 @@ kbd {
   font-size: 0.875rem;
   border: 1px solid #d1d5db;
   box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+}
+
+/* Link styles */
+.ProseMirror a {
+  cursor: pointer;
+}
+
+.ProseMirror a:hover {
+  text-decoration-thickness: 2px;
 } 

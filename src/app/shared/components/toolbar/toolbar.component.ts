@@ -75,6 +75,9 @@ export class ToolbarComponent implements OnInit, OnDestroy, OnChanges {
   showSignatureMenu = false;
   formatPainterActive = false;
   selectedImage: any = null;
+  showLinkDialog = false;
+  linkUrl: string = '';
+  linkText: string = '';
 
   // Current selections
   currentFontFamily = 'Arial, sans-serif';
@@ -851,6 +854,58 @@ export class ToolbarComponent implements OnInit, OnDestroy, OnChanges {
     if (customSignature) {
       this.signatures.push(customSignature);
       this.insertSignature(customSignature);
+    }
+  }
+
+  insertLink() {
+    if (this.editor) {
+      const { from, to } = this.editor.state.selection;
+      const selectedText = this.editor.state.doc.textBetween(from, to, ' ');
+      this.linkText = selectedText;
+      this.showLinkDialog = true;
+    }
+  }
+
+  applyLink() {
+    if (this.editor && this.linkUrl) {
+      if (this.linkText) {
+        // If we have text, insert both text and link
+        this.editor
+          .chain()
+          .focus()
+          .insertContent({
+            type: 'text',
+            text: this.linkText,
+            marks: [
+              {
+                type: 'link',
+                attrs: {
+                  href: this.linkUrl,
+                  target: '_blank'
+                }
+              }
+            ]
+          })
+          .run();
+      } else {
+        // If no text, just set the link on the selection
+        this.editor
+          .chain()
+          .focus()
+          .setLink({ href: this.linkUrl, target: '_blank' })
+          .run();
+      }
+      
+      // Reset and close dialog
+      this.linkUrl = '';
+      this.linkText = '';
+      this.showLinkDialog = false;
+    }
+  }
+
+  removeLink() {
+    if (this.editor) {
+      this.editor.chain().focus().unsetLink().run();
     }
   }
 }

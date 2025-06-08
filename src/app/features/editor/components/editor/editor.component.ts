@@ -13,6 +13,7 @@ import Image from '@tiptap/extension-image';
 import TextAlign from '@tiptap/extension-text-align';
 import Placeholder from '@tiptap/extension-placeholder';
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
+import Link from '@tiptap/extension-link';
 import { common, createLowlight } from 'lowlight'
 import * as Y from 'yjs';
 import { WebsocketProvider } from 'y-websocket';
@@ -456,6 +457,12 @@ export class EditorComponent implements OnInit, OnDestroy, AfterViewInit {
         HTMLAttributes: {
           class: 'signature-block',
         },
+      }),
+      Link.configure({
+        openOnClick: true,
+        HTMLAttributes: {
+          class: 'text-blue-600 hover:text-blue-800 underline'
+        }
       }),
     ];
 
