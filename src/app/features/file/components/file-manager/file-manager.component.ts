@@ -93,14 +93,14 @@ export class FileManagerComponent implements OnInit {
     console.log('Share document:', document);
   }
 
-  exportDocument(document: DocumentFile, format: 'pdf' | 'docx' | 'txt') {
-    this.fileService.exportDocument(document.id, format).subscribe(
+  exportDocument(doc: DocumentFile, format: 'pdf' | 'docx' | 'txt') {
+    this.fileService.exportDocument(doc.id, format).subscribe(
       (blob: Blob) => {
         // Download the file
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `${document.name}.${format}`;
+        a.download = `${doc.name}.${format}`;
         a.click();
         window.URL.revokeObjectURL(url);
       }
