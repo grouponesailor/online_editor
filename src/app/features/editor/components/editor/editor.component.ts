@@ -190,7 +190,11 @@ export class EditorComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngAfterViewInit() {
-    this.initializeEditor();
+    // Defer editor initialization to the next event loop cycle
+    // This prevents ExpressionChangedAfterItHasBeenCheckedError
+    setTimeout(() => {
+      this.initializeEditor();
+    }, 0);
   }
 
   ngOnDestroy() {
@@ -610,4 +614,4 @@ export class EditorComponent implements OnInit, OnDestroy, AfterViewInit {
         }
       });
   }
-} 
+}
