@@ -47,7 +47,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, OnChanges {
   @Input() documentId: string = '';
 
   // UI state
-  currentTab: string = 'home';
+  currentTab: string = 'file';
   currentZoom: number = 1;
   showShareDialog = false;
   showTextColorPicker = false;
@@ -257,6 +257,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, OnChanges {
   ];
 
   tabs: ToolbarTab[] = [
+    { id: 'file', label: 'File', icon: 'fas fa-file' },
     { id: 'home', label: 'Home', icon: 'fas fa-home' },
     { id: 'insert', label: 'Insert', icon: 'fas fa-plus' },
     { id: 'shapes', label: 'Shapes', icon: 'fas fa-shapes' },
