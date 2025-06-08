@@ -225,8 +225,25 @@ app.post('/api/share/:id/link', (req, res) => {
   res.json({ link });
 });
 
-// WebSocket server for real-time collaboration
-const wss = new WebSocket.Server({ port: PORT });
+// Start server first
+const server = app.listen(PORT, '0.0.0.0', async () => {
+  await loadPersistedData();
+  console.log(`🚀 Collaborative Document Server running on:`);
+  console.log(`   Local:    http://localhost:${PORT}`);
+  console.log(`   Network:  http://${HOST}:${PORT}`);
+  console.log(`   WebSocket: ws://${HOST}:${PORT}`);
+  console.log('');
+  console.log('📝 Available endpoints:');
+  console.log(`   Health:     GET  /api/health`);
+  console.log(`   Documents:  GET  /api/documents`);
+  console.log(`   Share:      POST /api/share/:id/settings`);
+  console.log('');
+  console.log('🔗 Share documents by visiting:');
+  console.log(`   http://${HOST}:4200/documents/{document-id}`);
+});
+
+// WebSocket server for real-time collaboration - attach to existing HTTP server
+const wss = new WebSocket.Server({ server });
 const rooms = new Map(); // documentId -> Set of WebSocket connections
 
 wss.on('connection', (ws, req) => {
@@ -365,23 +382,6 @@ wss.on('connection', (ws, req) => {
   });
 });
 
-// Start server
-const server = app.listen(PORT, '0.0.0.0', async () => {
-  await loadPersistedData();
-  console.log(`🚀 Collaborative Document Server running on:`);
-  console.log(`   Local:    http://localhost:${PORT}`);
-  console.log(`   Network:  http://${HOST}:${PORT}`);
-  console.log(`   WebSocket: ws://${HOST}:${PORT}`);
-  console.log('');
-  console.log('📝 Available endpoints:');
-  console.log(`   Health:     GET  /api/health`);
-  console.log(`   Documents:  GET  /api/documents`);
-  console.log(`   Share:      POST /api/share/:id/settings`);
-  console.log('');
-  console.log('🔗 Share documents by visiting:');
-  console.log(`   http://${HOST}:4200/documents/{document-id}`);
-});
-
 // Graceful shutdown
 process.on('SIGTERM', () => {
   console.log('Shutting down server...');
@@ -404,4 +404,4 @@ process.on('SIGINT', () => {
 });
 
 // Export for testing
-module.exports = { app, server, wss }; 
+module.exports = { app, server, wss };
