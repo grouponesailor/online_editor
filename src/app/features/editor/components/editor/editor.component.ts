@@ -363,7 +363,7 @@ export class EditorComponent implements OnInit, OnDestroy, AfterViewInit {
       StarterKit.configure({
         codeBlock: false,
         heading: {
-          levels: [1, 2, 3]
+          levels: [1, 2, 3, 4, 5, 6]
         }
       }),
       Table.configure({
@@ -446,7 +446,7 @@ export class EditorComponent implements OnInit, OnDestroy, AfterViewInit {
       extensions,
       editorProps: {
         attributes: {
-          class: 'prose prose-sm sm:prose lg:prose-lg mx-auto focus:outline-none',
+          class: 'a4-editor tiptap',
         },
         handleDOMEvents: {
           drop: (view, event) => {
@@ -543,6 +543,9 @@ export class EditorComponent implements OnInit, OnDestroy, AfterViewInit {
         } else {
           this.lastSaved = new Date();
         }
+        
+        // Auto-detect and fix RTL text direction for better cursor positioning
+        this.handleRTLTextDirection();
       }
     });
 
@@ -622,5 +625,76 @@ export class EditorComponent implements OnInit, OnDestroy, AfterViewInit {
           console.error('Failed to sync offline changes');
         }
       });
+  }
+
+  private handleRTLTextDirection() {
+    if (!this.editor) return;
+
+    const { state } = this.editor;
+    const { from, to } = state.selection;
+    
+    // Get the current paragraph or block
+    const $from = state.doc.resolve(from);
+    const currentBlock = $from.parent;
+    
+    if (currentBlock.type.name === 'paragraph' || currentBlock.type.name.includes('heading')) {
+      const text = currentBlock.textContent;
+      
+      if (text.trim()) {
+        const direction = this.detectTextDirection(text);
+        const editorElement = this.editor.view.dom as HTMLElement;
+        
+        // Set direction on the current block
+        const blockElement = this.findBlockElement($from);
+        if (blockElement) {
+          blockElement.dir = direction;
+          
+          // Also set on the editor container for overall direction context
+          if (direction === 'rtl') {
+            editorElement.classList.add('has-rtl-content');
+          } else {
+            editorElement.classList.remove('has-rtl-content');
+          }
+        }
+      }
+    }
+  }
+
+  private detectTextDirection(text: string): 'ltr' | 'rtl' {
+    // RTL character ranges (Arabic, Hebrew, Persian, etc.)
+    const rtlRegex = /[\u0590-\u083F]|[\u08A0-\u08FF]|[\uFB1D-\uFDFF]|[\uFE70-\uFEFF]/;
+    
+    // Count RTL characters
+    const rtlMatches = (text.match(new RegExp(rtlRegex, 'g')) || []).length;
+    const totalChars = text.replace(/\s/g, '').length;
+    
+    // If more than 30% of characters are RTL, consider it RTL text
+    return totalChars > 0 && (rtlMatches / totalChars) > 0.3 ? 'rtl' : 'ltr';
+  }
+
+  private findBlockElement(resolvedPos: any): HTMLElement | null {
+    const editorView = this.editor?.view;
+    if (!editorView) return null;
+
+    try {
+      const domPos = editorView.domAtPos(resolvedPos.pos);
+      let element = domPos.node as HTMLElement;
+      
+      // Walk up the DOM tree to find the block element
+      while (element && element !== editorView.dom) {
+        if (element.nodeType === Node.ELEMENT_NODE) {
+          const tagName = element.tagName.toLowerCase();
+          if (['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'div'].includes(tagName)) {
+            return element;
+          }
+        }
+        element = element.parentElement as HTMLElement;
+      }
+    } catch (error) {
+      // Silently handle any errors in DOM positioning
+      console.debug('Error finding block element:', error);
+    }
+    
+    return null;
   }
 }

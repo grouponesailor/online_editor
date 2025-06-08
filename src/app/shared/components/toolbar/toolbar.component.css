@@ -14,6 +14,42 @@
   color: #4a5568;
 }
 
+/* Heading dropdown preview styles */
+.heading-dropdown button[data-heading="h1"] {
+  font-size: 1.25rem;
+  font-weight: bold;
+}
+
+.heading-dropdown button[data-heading="h2"] {
+  font-size: 1.125rem;
+  font-weight: bold;
+}
+
+.heading-dropdown button[data-heading="h3"] {
+  font-size: 1rem;
+  font-weight: bold;
+}
+
+.heading-dropdown button[data-heading="h4"] {
+  font-size: 0.95rem;
+  font-weight: bold;
+}
+
+.heading-dropdown button[data-heading="h5"] {
+  font-size: 0.9rem;
+  font-weight: bold;
+}
+
+.heading-dropdown button[data-heading="h6"] {
+  font-size: 0.875rem;
+  font-weight: bold;
+}
+
+.heading-dropdown button[data-heading="paragraph"] {
+  font-size: 0.875rem;
+  font-weight: normal;
+}
+
 :host ::ng-deep .shape-container {
   display: inline-block;
   margin: 0.5rem;
