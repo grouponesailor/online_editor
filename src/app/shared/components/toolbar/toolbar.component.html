@@ -200,6 +200,33 @@
       </div>
     </div>
 
+    <!-- Signature -->
+    <div class="flex gap-1 border-r pr-2">
+      <div class="relative">
+        <button
+          class="p-2 rounded hover:bg-gray-100 hover:text-[#6200EE] transition-colors flex items-center"
+          (click)="showSignatureMenu = !showSignatureMenu"
+          title="Insert Signature">
+          <i class="fas fa-signature"></i>
+          <i class="fas fa-chevron-down ml-1"></i>
+        </button>
+        <div *ngIf="showSignatureMenu" class="absolute top-full left-0 mt-1 bg-white shadow-lg rounded py-1 z-50 w-64">
+          <button
+            *ngFor="let signature of signatures"
+            class="block w-full px-4 py-2 text-left hover:bg-gray-100 text-sm"
+            (click)="insertSignature(signature)">
+            <div [innerHTML]="sanitizeHTML(signature)"></div>
+          </button>
+          <div class="border-t my-1"></div>
+          <button
+            class="block w-full px-4 py-2 text-left hover:bg-gray-100 text-sm text-blue-600"
+            (click)="addCustomSignature()">
+            <i class="fas fa-plus mr-2"></i>Add Custom Signature
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Image -->
     <div class="flex gap-1 border-r pr-2">
       <div class="relative">
@@ -212,35 +239,46 @@
         </button>
         <div *ngIf="showImageMenu" class="absolute top-full left-0 mt-1 bg-white shadow-lg rounded py-1 z-50 w-48">
           <button
-            class="block w-full px-4 py-2 text-left hover:bg-gray-100 hover:text-[#6200EE] transition-colors"
+            class="block w-full px-4 py-2 text-left hover:bg-gray-100 text-sm"
             (click)="uploadImage()">
-            <i class="fas fa-upload mr-2"></i> Upload from computer
+            <i class="fas fa-upload mr-2"></i>Upload from Computer
           </button>
           <button
-            class="block w-full px-4 py-2 text-left hover:bg-gray-100 hover:text-[#6200EE] transition-colors"
+            class="block w-full px-4 py-2 text-left hover:bg-gray-100 text-sm"
             (click)="insertImageByUrl()">
-            <i class="fas fa-link mr-2"></i> By URL
+            <i class="fas fa-link mr-2"></i>Insert from URL
           </button>
           <button
-            class="block w-full px-4 py-2 text-left hover:bg-gray-100 hover:text-[#6200EE] transition-colors"
+            class="block w-full px-4 py-2 text-left hover:bg-gray-100 text-sm"
             (click)="searchImage()">
-            <i class="fas fa-search mr-2"></i> Search the web
+            <i class="fas fa-search mr-2"></i>Search Online
           </button>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- Shapes Tab -->
-  <div *ngIf="currentTab === 'shapes'" class="p-1">
-    <div class="grid grid-cols-8 gap-2">
-      <button
-        *ngFor="let shape of shapes"
-        class="p-2 border rounded hover:bg-gray-100 hover:border-[#6200EE] hover:text-[#6200EE] transition-colors shape-preview"
-        (click)="insertShape(shape)"
-        [title]="shape.name">
-        <div class="w-8 h-8" [innerHTML]="sanitizeHTML(shape.svgPath)"></div>
-      </button>
+    <!-- Shapes -->
+    <div class="flex gap-1 border-r pr-2">
+      <div class="relative">
+        <button
+          class="p-2 rounded hover:bg-gray-100 hover:text-[#6200EE] transition-colors flex items-center"
+          (click)="showShapesMenu = !showShapesMenu"
+          title="Insert Shape">
+          <i class="fas fa-shapes"></i>
+          <i class="fas fa-chevron-down ml-1"></i>
+        </button>
+        <div *ngIf="showShapesMenu" class="absolute top-full left-0 mt-1 bg-white shadow-lg rounded py-1 z-50 w-48">
+          <button
+            *ngFor="let shape of shapes"
+            class="block w-full px-4 py-2 text-left hover:bg-gray-100 text-sm flex items-center"
+            (click)="insertShape(shape)">
+            <svg class="w-4 h-4 mr-2" viewBox="0 0 24 24">
+              <path [attr.d]="shape.svgPath" fill="currentColor"/>
+            </svg>
+            {{ shape.name }}
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 

@@ -26,6 +26,7 @@ import Subscript from '@tiptap/extension-subscript';
 import Superscript from '@tiptap/extension-superscript';
 import Underline from '@tiptap/extension-underline';
 import { Shape } from '../../../../extensions/shape';
+import { Signature } from '../../../../extensions/signature';
 import { NetworkConfigService } from '../../../../core/services/network-config.service';
 import { ShareService } from '../../../../core/services/share.service';
 import { FileService } from '../../../file/services/file.service';
@@ -394,6 +395,11 @@ export class EditorComponent implements OnInit, OnDestroy, AfterViewInit {
           levels: [1, 2, 3, 4, 5, 6]
         }
       }),
+      Shape.configure({
+        HTMLAttributes: {
+          class: 'shape-container'
+        }
+      }),
       Table.configure({
         resizable: true,
         HTMLAttributes: {
@@ -446,10 +452,10 @@ export class EditorComponent implements OnInit, OnDestroy, AfterViewInit {
       Underline,
       FontSize,
       LineHeight,
-      Shape.configure({
+      Signature.configure({
         HTMLAttributes: {
-          class: 'shape-node'
-        }
+          class: 'signature-block',
+        },
       }),
     ];
 
@@ -468,6 +474,8 @@ export class EditorComponent implements OnInit, OnDestroy, AfterViewInit {
         })
       );
     }
+
+    console.log('Initializing editor with extensions:', extensions);
 
     this.editor = new Editor({
       element: this.editorElement.nativeElement,
