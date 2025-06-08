@@ -54,16 +54,71 @@
     class="flex-shrink-0">
   </app-toolbar>
 
-  <!-- Editor Container -->
-  <div class="flex flex-1 overflow-hidden">
-    <!-- Editor -->
-    <div class="flex-1 flex flex-col">
-      <div class="flex-1 overflow-auto p-4 bg-gray-100">
-        <div class="a4-page mx-auto">
-          <div 
-            #editorElement
-            class="a4-editor focus:outline-none bg-white">
+  <!-- Main Content Area -->
+  <div class="flex-1 flex overflow-hidden">
+    <!-- Editor Area -->
+    <div class="flex-1 editor-container">
+      <!-- Editor Scroll Container -->
+      <div class="editor-scroll-container bg-gray-100">
+        <div class="pages-container">
+          <div *ngFor="let page of pages; let i = index" class="a4-page">
+            <div 
+              #editorElement
+              [attr.data-page]="i"
+              [class.editor-content]="i === 0"
+              class="a4-editor tiptap prose prose-sm sm:prose lg:prose-lg xl:prose-xl focus:outline-none"
+              [class.active-page]="currentPage === i">
+            </div>
+            <div *ngIf="i < pages.length - 1" class="page-break-indicator">
+              Page {{i + 1}} of {{pages.length}}
+            </div>
           </div>
+        </div>
+      </div>
+
+      <!-- Bottom Stats Toolbar -->
+      <div class="bottom-toolbar">
+        <!-- Left side - Document Stats -->
+        <div class="flex items-center space-x-6 text-sm text-gray-600">
+          <div class="flex items-center">
+            <i class="fas fa-font mr-2"></i>
+            <span>{{ wordCount }} words</span>
+          </div>
+          <div class="flex items-center">
+            <i class="fas fa-text-width mr-2"></i>
+            <span>{{ charCount }} characters</span>
+          </div>
+          <div class="flex items-center">
+            <i class="fas fa-paragraph mr-2"></i>
+            <span>{{ paragraphCount }} paragraphs</span>
+          </div>
+          <div class="flex items-center">
+            <i class="fas fa-file-alt mr-2"></i>
+            <span>{{ pages.length }} pages</span>
+          </div>
+        </div>
+
+        <!-- Right side - Zoom Controls -->
+        <div class="flex items-center space-x-2">
+          <button
+            class="p-1.5 rounded hover:bg-gray-100 transition-colors"
+            (click)="zoomOut()"
+            [disabled]="currentZoom <= 0.5"
+            [class.opacity-50]="currentZoom <= 0.5"
+            title="Zoom Out">
+            <i class="fas fa-search-minus text-gray-600"></i>
+          </button>
+          <span class="text-sm text-gray-600 min-w-[60px] text-center">
+            {{ (currentZoom * 100).toFixed(0) }}%
+          </span>
+          <button
+            class="p-1.5 rounded hover:bg-gray-100 transition-colors"
+            (click)="zoomIn()"
+            [disabled]="currentZoom >= 2"
+            [class.opacity-50]="currentZoom >= 2"
+            title="Zoom In">
+            <i class="fas fa-search-plus text-gray-600"></i>
+          </button>
         </div>
       </div>
     </div>

@@ -2,6 +2,108 @@
   min-height: 500px;
 }
 
+/* A4 Page Formatting */
+.pages-container {
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100%;
+}
+
+.a4-page {
+  width: 210mm;  /* A4 width */
+  min-height: 297mm;  /* A4 height */
+  height: 297mm;  /* Fixed height */
+  padding: 20mm;  /* Standard margin */
+  background: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  margin: 0 auto 2rem;
+  position: relative;
+  border-radius: 4px;
+  overflow: hidden;
+  break-inside: avoid;
+  page-break-after: always;
+}
+
+.a4-page::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+.a4-editor {
+  height: 257mm;  /* A4 height - 2 * margin */
+  outline: none;
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.editor-content {
+  overflow: visible;
+}
+
+/* Page break indicator */
+.page-break-indicator {
+  position: absolute;
+  bottom: 5mm;
+  right: 5mm;
+  font-size: 12px;
+  color: #666;
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 4px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Active page styling */
+.active-page {
+  background-color: white;
+}
+
+/* Print styles */
+@media print {
+  .pages-container {
+    padding: 0;
+  }
+
+  .a4-page {
+    width: 210mm;
+    height: 297mm;
+    margin: 0;
+    padding: 20mm;
+    box-shadow: none;
+    border-radius: 0;
+    page-break-after: always;
+  }
+
+  .a4-page::before {
+    display: none;
+  }
+
+  .a4-editor {
+    height: 257mm;
+  }
+
+  .page-break-indicator {
+    display: none;
+  }
+
+  /* Hide UI elements when printing */
+  .toolbar,
+  .comments-sidebar,
+  .header {
+    display: none !important;
+  }
+}
+
 .tiptap p.is-editor-empty:first-child::before {
   color: #adb5bd;
   content: attr(data-placeholder);
@@ -74,4 +176,58 @@
 
 .tiptap img.ProseMirror-selectednode {
   outline: 2px solid #4299e1;
+}
+
+/* Bottom Toolbar */
+.bottom-toolbar {
+  height: 44px;
+  background: white;
+  border-top: 1px solid #e5e7eb;
+  z-index: 20;
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1rem;
+}
+
+.bottom-toolbar button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.bottom-toolbar button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.bottom-toolbar button:not(:disabled):hover {
+  background-color: #f3f4f6;
+}
+
+.bottom-toolbar i {
+  font-size: 14px;
+}
+
+/* Ensure the editor container allows for the bottom toolbar */
+.editor-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.editor-scroll-container {
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
 } 
