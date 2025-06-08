@@ -4,6 +4,7 @@ const cors = require('cors');
 const fs = require('fs').promises;
 const path = require('path');
 const { networkInterfaces } = require('os');
+const net = require('net');
 
 // Get local IP address
 function getLocalIP() {
@@ -30,7 +31,34 @@ function getLocalIP() {
   return 'localhost';
 }
 
-const PORT = process.env.PORT || 1234;
+// Function to check if port is available
+function isPortAvailable(port) {
+  return new Promise((resolve) => {
+    const server = net.createServer();
+    server.listen(port, (err) => {
+      if (err) {
+        resolve(false);
+      } else {
+        server.once('close', () => resolve(true));
+        server.close();
+      }
+    });
+    server.on('error', () => resolve(false));
+  });
+}
+
+// Function to find an available port
+async function findAvailablePort(startPort = 1234) {
+  let port = startPort;
+  while (port < startPort + 100) { // Try up to 100 ports
+    if (await isPortAvailable(port)) {
+      return port;
+    }
+    port++;
+  }
+  throw new Error(`No available port found in range ${startPort}-${startPort + 99}`);
+}
+
 const HOST = getLocalIP();
 
 // Create Express app for REST API
@@ -85,7 +113,7 @@ app.get('/api/health', (req, res) => {
   res.json({ 
     status: 'healthy', 
     host: HOST,
-    port: PORT,
+    port: server.address()?.port || 'unknown',
     timestamp: new Date().toISOString(),
     uptime: process.uptime()
   });
@@ -221,187 +249,201 @@ app.delete('/api/share/:id/users/:userId', (req, res) => {
 app.post('/api/share/:id/link', (req, res) => {
   const { id } = req.params;
   const protocol = req.secure ? 'https' : 'http';
+  const port = server.address()?.port || 1234;
   const link = `${protocol}://${HOST}:4200/documents/${id}`;
   res.json({ link });
 });
 
-// Start server first
-const server = app.listen(PORT, '0.0.0.0', async () => {
-  await loadPersistedData();
-  console.log(`🚀 Collaborative Document Server running on:`);
-  console.log(`   Local:    http://localhost:${PORT}`);
-  console.log(`   Network:  http://${HOST}:${PORT}`);
-  console.log(`   WebSocket: ws://${HOST}:${PORT}`);
-  console.log('');
-  console.log('📝 Available endpoints:');
-  console.log(`   Health:     GET  /api/health`);
-  console.log(`   Documents:  GET  /api/documents`);
-  console.log(`   Share:      POST /api/share/:id/settings`);
-  console.log('');
-  console.log('🔗 Share documents by visiting:');
-  console.log(`   http://${HOST}:4200/documents/{document-id}`);
-});
+// Start server with automatic port finding
+async function startServer() {
+  try {
+    const PORT = await findAvailablePort(process.env.PORT || 1234);
+    
+    const server = app.listen(PORT, '0.0.0.0', async () => {
+      await loadPersistedData();
+      console.log(`🚀 Collaborative Document Server running on:`);
+      console.log(`   Local:    http://localhost:${PORT}`);
+      console.log(`   Network:  http://${HOST}:${PORT}`);
+      console.log(`   WebSocket: ws://${HOST}:${PORT}`);
+      console.log('');
+      console.log('📝 Available endpoints:');
+      console.log(`   Health:     GET  /api/health`);
+      console.log(`   Documents:  GET  /api/documents`);
+      console.log(`   Share:      POST /api/share/:id/settings`);
+      console.log('');
+      console.log('🔗 Share documents by visiting:');
+      console.log(`   http://${HOST}:4200/documents/{document-id}`);
+    });
 
-// WebSocket server for real-time collaboration - attach to existing HTTP server
-const wss = new WebSocket.Server({ server });
-const rooms = new Map(); // documentId -> Set of WebSocket connections
+    // WebSocket server for real-time collaboration - attach to existing HTTP server
+    const wss = new WebSocket.Server({ server });
+    const rooms = new Map(); // documentId -> Set of WebSocket connections
 
-wss.on('connection', (ws, req) => {
-  console.log('New WebSocket connection');
-  
-  let documentId = null;
-  let userId = null;
-
-  ws.on('message', (message) => {
-    try {
-      let data;
+    wss.on('connection', (ws, req) => {
+      console.log('New WebSocket connection');
       
-      // Handle both string and binary messages
-      if (message instanceof Buffer) {
-        // This is likely a Yjs update
-        if (!documentId) {
-          console.log('Received binary message without document ID');
-          return;
-        }
-        
-        // Broadcast to all clients in the same room
-        const room = rooms.get(documentId);
-        if (room) {
-          room.forEach(client => {
-            if (client !== ws && client.readyState === WebSocket.OPEN) {
-              client.send(message);
+      let documentId = null;
+      let userId = null;
+
+      ws.on('message', (message) => {
+        try {
+          let data;
+          
+          // Handle both string and binary messages
+          if (message instanceof Buffer) {
+            // This is likely a Yjs update
+            if (!documentId) {
+              console.log('Received binary message without document ID');
+              return;
             }
-          });
-        }
-        return;
-      }
-      
-      // Handle string messages (JSON)
-      data = JSON.parse(message.toString());
-      
-      if (data.type === 'join') {
-        documentId = data.documentId;
-        userId = data.userId || `user-${Date.now()}`;
-        
-        console.log(`User ${userId} joined document ${documentId}`);
-        
-        // Add to room
-        if (!rooms.has(documentId)) {
-          rooms.set(documentId, new Set());
-        }
-        rooms.get(documentId).add(ws);
-        
-        // Send existing document content if available
-        const content = documents.get(documentId);
-        if (content) {
-          ws.send(JSON.stringify({
-            type: 'document-content',
-            content: content
-          }));
-        }
-        
-        // Notify other clients about new user
-        const room = rooms.get(documentId);
-        room.forEach(client => {
-          if (client !== ws && client.readyState === WebSocket.OPEN) {
-            client.send(JSON.stringify({
-              type: 'user-joined',
-              userId: userId,
-              documentId: documentId
-            }));
+            
+            // Broadcast to all clients in the same room
+            const room = rooms.get(documentId);
+            if (room) {
+              room.forEach(client => {
+                if (client !== ws && client.readyState === WebSocket.OPEN) {
+                  client.send(message);
+                }
+              });
+            }
+            return;
           }
-        });
+          
+          // Handle string messages (JSON)
+          data = JSON.parse(message.toString());
+          
+          if (data.type === 'join') {
+            documentId = data.documentId;
+            userId = data.userId || `user-${Date.now()}`;
+            
+            console.log(`User ${userId} joined document ${documentId}`);
+            
+            // Add to room
+            if (!rooms.has(documentId)) {
+              rooms.set(documentId, new Set());
+            }
+            rooms.get(documentId).add(ws);
+            
+            // Send existing document content if available
+            const content = documents.get(documentId);
+            if (content) {
+              ws.send(JSON.stringify({
+                type: 'document-content',
+                content: content
+              }));
+            }
+            
+            // Notify other clients about new user
+            const room = rooms.get(documentId);
+            room.forEach(client => {
+              if (client !== ws && client.readyState === WebSocket.OPEN) {
+                client.send(JSON.stringify({
+                  type: 'user-joined',
+                  userId: userId,
+                  documentId: documentId
+                }));
+              }
+            });
+            
+          } else if (data.type === 'leave') {
+            if (documentId && rooms.has(documentId)) {
+              rooms.get(documentId).delete(ws);
+              if (rooms.get(documentId).size === 0) {
+                rooms.delete(documentId);
+              }
+            }
+            
+          } else if (data.type === 'document-update') {
+            // Save document content
+            if (documentId && data.content) {
+              documents.set(documentId, data.content);
+              
+              // Save to disk
+              const docData = {
+                name: documentNames.get(documentId),
+                content: data.content,
+                settings: shareSettings.get(documentId),
+                users: sharedUsers.get(documentId)
+              };
+              saveDocumentData(documentId, docData);
+            }
+            
+            // Broadcast to other clients
+            if (documentId && rooms.has(documentId)) {
+              const room = rooms.get(documentId);
+              room.forEach(client => {
+                if (client !== ws && client.readyState === WebSocket.OPEN) {
+                  client.send(JSON.stringify(data));
+                }
+              });
+            }
+          }
+          
+        } catch (error) {
+          console.error('Error handling WebSocket message:', error);
+        }
+      });
+
+      ws.on('close', () => {
+        console.log('WebSocket connection closed');
         
-      } else if (data.type === 'leave') {
+        // Remove from room
         if (documentId && rooms.has(documentId)) {
           rooms.get(documentId).delete(ws);
           if (rooms.get(documentId).size === 0) {
             rooms.delete(documentId);
           }
-        }
-        
-      } else if (data.type === 'document-update') {
-        // Save document content
-        if (documentId && data.content) {
-          documents.set(documentId, data.content);
           
-          // Save to disk
-          const docData = {
-            name: documentNames.get(documentId),
-            content: data.content,
-            settings: shareSettings.get(documentId),
-            users: sharedUsers.get(documentId)
-          };
-          saveDocumentData(documentId, docData);
-        }
-        
-        // Broadcast to other clients
-        if (documentId && rooms.has(documentId)) {
+          // Notify other clients
           const room = rooms.get(documentId);
-          room.forEach(client => {
-            if (client !== ws && client.readyState === WebSocket.OPEN) {
-              client.send(JSON.stringify(data));
-            }
-          });
-        }
-      }
-      
-    } catch (error) {
-      console.error('Error handling WebSocket message:', error);
-    }
-  });
-
-  ws.on('close', () => {
-    console.log('WebSocket connection closed');
-    
-    // Remove from room
-    if (documentId && rooms.has(documentId)) {
-      rooms.get(documentId).delete(ws);
-      if (rooms.get(documentId).size === 0) {
-        rooms.delete(documentId);
-      }
-      
-      // Notify other clients
-      const room = rooms.get(documentId);
-      if (room) {
-        room.forEach(client => {
-          if (client.readyState === WebSocket.OPEN) {
-            client.send(JSON.stringify({
-              type: 'user-left',
-              userId: userId,
-              documentId: documentId
-            }));
+          if (room) {
+            room.forEach(client => {
+              if (client.readyState === WebSocket.OPEN) {
+                client.send(JSON.stringify({
+                  type: 'user-left',
+                  userId: userId,
+                  documentId: documentId
+                }));
+              }
+            });
           }
+        }
+      });
+
+      ws.on('error', (error) => {
+        console.error('WebSocket error:', error);
+      });
+    });
+
+    // Graceful shutdown
+    process.on('SIGTERM', () => {
+      console.log('Shutting down server...');
+      server.close(() => {
+        wss.close(() => {
+          console.log('Server shutdown complete');
+          process.exit(0);
         });
-      }
-    }
-  });
-
-  ws.on('error', (error) => {
-    console.error('WebSocket error:', error);
-  });
-});
-
-// Graceful shutdown
-process.on('SIGTERM', () => {
-  console.log('Shutting down server...');
-  server.close(() => {
-    wss.close(() => {
-      console.log('Server shutdown complete');
-      process.exit(0);
+      });
     });
-  });
-});
 
-process.on('SIGINT', () => {
-  console.log('Shutting down server...');
-  server.close(() => {
-    wss.close(() => {
-      console.log('Server shutdown complete');
-      process.exit(0);
+    process.on('SIGINT', () => {
+      console.log('Shutting down server...');
+      server.close(() => {
+        wss.close(() => {
+          console.log('Server shutdown complete');
+          process.exit(0);
+        });
+      });
     });
-  });
-});
 
-// Export for testing
-module.exports = { app, server, wss };
+    // Export for testing
+    module.exports = { app, server, wss };
+
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  }
+}
+
+// Start the server
+startServer();
