@@ -106,6 +106,16 @@ export class FileToolbarComponent {
     this.exportDocument.emit('docx');
   }
 
+  onExportExcel() {
+    this.exportDocument.emit('xlsx');
+    this.showSaveNotification('Exporting to Excel format...');
+  }
+
+  onExportPowerPoint() {
+    this.exportDocument.emit('pptx');
+    this.showSaveNotification('Exporting to PowerPoint format...');
+  }
+
   onPrint() {
     window.print();
   }

@@ -53,6 +53,18 @@
     </button>
     <button
       class="p-2 rounded hover:bg-gray-100 hover:text-[#6200EE] transition-colors"
+      (click)="onExportExcel()"
+      title="Export to Excel">
+      <img src="https://cdn3.iconfinder.com/data/icons/font-awesome-solid/512/file-excel-512.png" alt="Excel" class="w-4 h-4">
+    </button>
+    <button
+      class="p-2 rounded hover:bg-gray-100 hover:text-[#6200EE] transition-colors"
+      (click)="onExportPowerPoint()"
+      title="Export to PowerPoint">
+      <img src="https://cdn3.iconfinder.com/data/icons/font-awesome-solid/512/file-powerpoint-512.png" alt="PowerPoint" class="w-4 h-4">
+    </button>
+    <button
+      class="p-2 rounded hover:bg-gray-100 hover:text-[#6200EE] transition-colors"
       (click)="onPrint()"
       title="Print">
       <i class="fas fa-print"></i>
