@@ -1,71 +1,167 @@
-<div class="h-full bg-white border-l">
-  <div class="p-4 border-b">
+<div class="comments-sidebar h-full flex flex-col" *ngIf="isOpen$ | async">
+  <!-- Toggle Handle -->
+  <button class="toggle-handle" (click)="toggleSidebar()" [title]="(isOpen$ | async) ? 'Minimize comments' : 'Show comments'">
+    <i class="fas" [class.fa-chevron-right]="!(isOpen$ | async)" [class.fa-chevron-left]="isOpen$ | async"></i>
+  </button>
+
+  <!-- Header -->
+  <div class="flex items-center justify-between p-4 border-b">
     <h2 class="text-lg font-semibold">Comments</h2>
+    <button class="text-gray-500 hover:text-gray-700" (click)="closeSidebar()" title="Close comments">
+      <i class="fas fa-times"></i>
+    </button>
   </div>
 
   <!-- Comments List -->
-  <div class="p-4 space-y-4">
-    <div *ngIf="comments.length === 0" class="text-center text-gray-500">
-      No comments yet
+  <div class="flex-1 overflow-y-auto p-4 space-y-4">
+    <div *ngIf="comments.length === 0" class="text-center text-gray-500 py-8">
+      No comments yet. Select some text and add a comment!
     </div>
 
-    <div *ngFor="let comment of comments" class="space-y-2">
-      <!-- Comment -->
-      <div class="bg-gray-50 rounded-lg p-3">
-        <div class="flex items-center gap-2 mb-2">
-          <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
-            <img *ngIf="comment.author.avatar" [src]="comment.author.avatar" [alt]="comment.author.name" class="w-8 h-8 rounded-full">
-            <i *ngIf="!comment.author.avatar" class="fas fa-user text-gray-400"></i>
-          </div>
-          <div>
-            <div class="font-medium">{{ comment.author.name }}</div>
-            <div class="text-sm text-gray-500">{{ comment.createdAt | date:'short' }}</div>
-          </div>
-        </div>
-        <p class="text-gray-700">{{ comment.text }}</p>
-        <div class="mt-2 flex items-center gap-4 text-sm">
-          <button class="text-gray-500 hover:text-gray-700" (click)="replyToComment(comment)">
-            <i class="fas fa-reply mr-1"></i> Reply
-          </button>
-          <button class="text-gray-500 hover:text-gray-700" (click)="resolveComment(comment)">
-            <i class="fas fa-check mr-1"></i> Resolve
-          </button>
-        </div>
-      </div>
-
-      <!-- Replies -->
-      <div *ngIf="comment.replies && comment.replies.length > 0" class="ml-8 space-y-2">
-        <div *ngFor="let reply of comment.replies" class="bg-gray-50 rounded-lg p-3">
-          <div class="flex items-center gap-2 mb-2">
-            <div class="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center">
-              <img *ngIf="reply.author.avatar" [src]="reply.author.avatar" [alt]="reply.author.name" class="w-6 h-6 rounded-full">
-              <i *ngIf="!reply.author.avatar" class="fas fa-user text-gray-400"></i>
+    <div *ngFor="let comment of comments" class="comment-container" [class.resolved]="comment.resolved">
+      <!-- Main Comment -->
+      <div class="bg-white rounded-lg shadow p-4">
+        <!-- Comment Header -->
+        <div class="flex items-center justify-between mb-2">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
+              <img *ngIf="comment.author.avatar" [src]="comment.author.avatar" [alt]="comment.author.name" class="w-full h-full object-cover">
+              <i *ngIf="!comment.author.avatar" class="fas fa-user text-gray-400"></i>
             </div>
             <div>
-              <div class="font-medium">{{ reply.author.name }}</div>
-              <div class="text-sm text-gray-500">{{ reply.createdAt | date:'short' }}</div>
+              <div class="font-medium">{{ comment.author.name }}</div>
+              <div class="text-xs text-gray-500">{{ getCommentDate(comment.createdAt) }}</div>
             </div>
           </div>
-          <p class="text-gray-700">{{ reply.text }}</p>
+          <div class="flex items-center gap-2">
+            <button 
+              *ngIf="comment.selection"
+              class="text-gray-500 hover:text-blue-600" 
+              (click)="highlightCommentSelection(comment)"
+              title="Show in document">
+              <i class="fas fa-map-marker-alt"></i>
+            </button>
+            <button 
+              class="text-gray-500 hover:text-green-600" 
+              (click)="resolveComment(comment)"
+              [title]="comment.resolved ? 'Unresolve comment' : 'Resolve comment'">
+              <i class="fas" [class.fa-check-circle]="comment.resolved" [class.fa-circle]="!comment.resolved"></i>
+            </button>
+            <button 
+              class="text-gray-500 hover:text-red-600" 
+              (click)="deleteComment(comment.id)"
+              title="Delete comment">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Selected Text -->
+        <div *ngIf="comment.selection && comment.selection.text" class="text-sm bg-gray-50 p-2 rounded mb-2 italic">
+          "{{ comment.selection.text }}"
+        </div>
+
+        <!-- Comment Content -->
+        <div *ngIf="editingComment?.id !== comment.id" class="text-gray-700 whitespace-pre-wrap">
+          {{ comment.text }}
+        </div>
+
+        <!-- Edit Form -->
+        <div *ngIf="editingComment?.id === comment.id" class="mt-2">
+          <textarea
+            #editInput
+            [value]="comment.text"
+            class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            rows="3">
+          </textarea>
+          <div class="flex justify-end gap-2 mt-2">
+            <button
+              class="px-3 py-1 text-sm text-gray-600 hover:text-gray-800"
+              (click)="editingComment = null">
+              Cancel
+            </button>
+            <button
+              class="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
+              (click)="updateComment(comment, editInput.value)">
+              Save
+            </button>
+          </div>
+        </div>
+
+        <!-- Comment Actions -->
+        <div *ngIf="editingComment?.id !== comment.id" class="mt-2 flex items-center gap-4 text-sm">
+          <button
+            class="text-gray-500 hover:text-gray-700"
+            (click)="editComment(comment)">
+            <i class="fas fa-edit mr-1"></i> Edit
+          </button>
+          <button
+            class="text-gray-500 hover:text-gray-700"
+            (click)="replyToComment(comment)">
+            <i class="fas fa-reply mr-1"></i> Reply
+          </button>
+        </div>
+
+        <!-- Reply Form -->
+        <div *ngIf="replyingTo?.id === comment.id" class="mt-3">
+          <textarea
+            #replyInput
+            placeholder="Write a reply..."
+            class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            rows="2">
+          </textarea>
+          <div class="flex justify-end gap-2 mt-2">
+            <button
+              class="px-3 py-1 text-sm text-gray-600 hover:text-gray-800"
+              (click)="replyingTo = null">
+              Cancel
+            </button>
+            <button
+              class="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
+              (click)="submitReply(comment, replyInput.value)">
+              Reply
+            </button>
+          </div>
+        </div>
+
+        <!-- Replies -->
+        <div *ngIf="comment.replies && comment.replies.length > 0" class="mt-3 space-y-3">
+          <div *ngFor="let reply of comment.replies" class="pl-4 border-l-2 border-gray-200">
+            <div class="flex items-center gap-2 mb-1">
+              <div class="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
+                <img *ngIf="reply.author.avatar" [src]="reply.author.avatar" [alt]="reply.author.name" class="w-full h-full object-cover">
+                <i *ngIf="!reply.author.avatar" class="fas fa-user text-gray-400"></i>
+              </div>
+              <div>
+                <div class="font-medium text-sm">{{ reply.author.name }}</div>
+                <div class="text-xs text-gray-500">{{ getCommentDate(reply.createdAt) }}</div>
+              </div>
+            </div>
+            <div class="text-sm text-gray-700 whitespace-pre-wrap">{{ reply.text }}</div>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Add Comment -->
-  <div class="p-4 border-t">
+  <!-- Add Comment Form -->
+  <div class="border-t p-4 bg-white">
     <textarea
       [(ngModel)]="newCommentText"
-      placeholder="Add a comment..."
-      class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-      rows="3">
+      placeholder="Add a comment... Press Enter to submit, Shift+Enter for new line"
+      class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+      rows="3"
+      (keydown)="addComment($event)">
     </textarea>
-    <div class="mt-2 flex justify-end">
+    <div class="flex justify-between items-center mt-2">
+      <div class="text-sm text-gray-500" *ngIf="selectedText">
+        <i class="fas fa-quote-left mr-1"></i> Selected text will be referenced
+      </div>
       <button
-        class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+        class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
         [disabled]="!newCommentText.trim()"
         (click)="addComment()">
-        Comment
+        Add Comment
       </button>
     </div>
   </div>

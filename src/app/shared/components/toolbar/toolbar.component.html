@@ -1,3 +1,4 @@
+<!-- Toolbar -->
 <div class="bg-white border-b">
   <!-- Tabs -->
   <div class="flex border-b">
@@ -52,6 +53,12 @@
         (click)="toggleShareDialog()"
         title="Share Document">
         <i class="fas fa-share-alt"></i>
+      </button>
+      <button
+        class="p-2 rounded hover:bg-gray-100"
+        (click)="toggleComments()"
+        title="Toggle Comments">
+        <i class="fas fa-comments"></i>
       </button>
     </div>
 
@@ -109,6 +116,42 @@
         (click)="item.command(editor)"
         [title]="item.label">
         <i [class]="item.icon"></i>
+      </button>
+    </div>
+
+    <!-- Text & Highlight Color -->
+    <div class="flex gap-1 border-r pr-2">
+      <button
+        class="toolbar-color-btn p-2 rounded hover:bg-gray-100 hover:text-[#6200EE] transition-colors flex items-center relative"
+        [class.active]="showTextColorPicker"
+        (click)="toggleTextColor()"
+        data-color-trigger
+        title="Text Color">
+        <div class="color-icon-container">
+          <i class="fas fa-font text-gray-700"></i>
+          <div 
+            class="color-swatch"
+            [class.light-color]="currentTextColor === '#FFFFFF' || currentTextColor === '#FFFF00' || currentTextColor === '#00FFFF'"
+            [style.background-color]="currentTextColor">
+          </div>
+        </div>
+        <i class="fas fa-chevron-down ml-1 text-xs"></i>
+      </button>
+      <button
+        class="toolbar-color-btn p-2 rounded hover:bg-gray-100 hover:text-[#6200EE] transition-colors flex items-center relative"
+        [class.active]="showHighlightPicker"
+        (click)="toggleHighlight()"
+        data-color-trigger
+        title="Highlight">
+        <div class="color-icon-container">
+          <i class="fas fa-highlighter text-gray-700"></i>
+          <div 
+            class="color-swatch"
+            [class.light-color]="currentHighlightColor === '#FFFFFF' || currentHighlightColor === '#FFFF00' || currentHighlightColor === '#FFFACD' || currentHighlightColor === '#D3D3D3'"
+            [style.background-color]="currentHighlightColor">
+          </div>
+        </div>
+        <i class="fas fa-chevron-down ml-1 text-xs"></i>
       </button>
     </div>
 
@@ -246,24 +289,6 @@
 
   <!-- Format Tab -->
   <div *ngIf="currentTab === 'format'" class="flex flex-wrap gap-1 p-1">
-    <!-- Advanced Text -->
-    <div class="flex gap-1 border-r pr-2">
-      <button
-        class="p-2 rounded hover:bg-gray-100 hover:text-[#6200EE] transition-colors"
-        (click)="toggleTextColor()"
-        title="Text Color">
-        <i class="fas fa-font"></i>
-        <i class="fas fa-chevron-down ml-1"></i>
-      </button>
-      <button
-        class="p-2 rounded hover:bg-gray-100 hover:text-[#6200EE] transition-colors"
-        (click)="toggleHighlight()"
-        title="Highlight">
-        <i class="fas fa-highlighter"></i>
-        <i class="fas fa-chevron-down ml-1"></i>
-      </button>
-    </div>
-
     <!-- Spacing -->
     <div class="flex gap-1 border-r pr-2">
       <div class="relative">
@@ -359,32 +384,134 @@
 
 <!-- Text Color Picker -->
 <div *ngIf="showTextColorPicker" class="fixed inset-0 bg-black bg-opacity-25 flex items-center justify-center z-50">
-  <div class="bg-white rounded-lg p-4 shadow-xl">
-    <h3 class="text-lg font-semibold mb-4">Text Color</h3>
-    <input
-      type="color"
-      [(ngModel)]="currentTextColor"
-      (change)="applyTextColor()"
-      class="w-full h-12 rounded border hover:border-[#6200EE] focus:border-[#6200EE] transition-colors">
-    <div class="flex gap-2 mt-4">
-      <button class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 transition-colors" (click)="showTextColorPicker = false">Cancel</button>
-      <button class="px-4 py-2 bg-[#6200EE] text-white rounded hover:bg-[#5000CC] transition-colors" (click)="applyTextColor()">Apply</button>
+  <div class="bg-white rounded-lg p-6 shadow-xl max-w-md w-full mx-4">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-lg font-semibold">Text Color</h3>
+      <button 
+        class="text-gray-400 hover:text-gray-600"
+        (click)="showTextColorPicker = false">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    
+    <!-- Common Colors Grid -->
+    <div class="mb-4">
+      <label class="block text-sm font-medium text-gray-700 mb-2">Common Colors</label>
+      <div class="grid grid-cols-8 gap-2">
+        <button
+          *ngFor="let color of commonTextColors"
+          class="w-8 h-8 rounded border-2 hover:border-gray-400 transition-colors"
+          [style.background-color]="color"
+          [class.border-blue-500]="currentTextColor === color"
+          [class.border-gray-400]="currentTextColor !== color && (color === '#FFFFFF' || color === '#FFFF00' || color === '#00FFFF' || color === '#FF00FF')"
+          [class.border-gray-300]="currentTextColor !== color && !(color === '#FFFFFF' || color === '#FFFF00' || color === '#00FFFF' || color === '#FF00FF')"
+          (click)="selectTextColor(color)"
+          [title]="color">
+        </button>
+      </div>
+    </div>
+
+    <!-- Custom Color -->
+    <div class="mb-4">
+      <label class="block text-sm font-medium text-gray-700 mb-2">Custom Color</label>
+      <div class="flex items-center gap-3">
+        <input
+          type="color"
+          [(ngModel)]="currentTextColor"
+          class="w-12 h-8 rounded border border-gray-300 cursor-pointer">
+        <span class="text-sm text-gray-600">{{ currentTextColor }}</span>
+      </div>
+    </div>
+
+    <!-- Remove Text Color Option -->
+    <div class="mb-4">
+      <button
+        class="w-full px-4 py-2 bg-red-50 text-red-600 border border-red-200 rounded hover:bg-red-100 transition-colors"
+        (click)="removeTextColor()">
+        <i class="fas fa-eraser mr-2"></i>
+        Remove Text Color
+      </button>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="flex gap-3 pt-4 border-t">
+      <button 
+        class="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition-colors" 
+        (click)="showTextColorPicker = false">
+        Cancel
+      </button>
+      <button 
+        class="flex-1 px-4 py-2 bg-[#6200EE] text-white rounded hover:bg-[#5000CC] transition-colors" 
+        (click)="applyTextColor()">
+        Apply
+      </button>
     </div>
   </div>
 </div>
 
 <!-- Highlight Color Picker -->
 <div *ngIf="showHighlightPicker" class="fixed inset-0 bg-black bg-opacity-25 flex items-center justify-center z-50">
-  <div class="bg-white rounded-lg p-4 shadow-xl">
-    <h3 class="text-lg font-semibold mb-4">Highlight Color</h3>
-    <input
-      type="color"
-      [(ngModel)]="currentHighlightColor"
-      (change)="applyHighlight()"
-      class="w-full h-12 rounded border hover:border-[#6200EE] focus:border-[#6200EE] transition-colors">
-    <div class="flex gap-2 mt-4">
-      <button class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 transition-colors" (click)="showHighlightPicker = false">Cancel</button>
-      <button class="px-4 py-2 bg-[#6200EE] text-white rounded hover:bg-[#5000CC] transition-colors" (click)="applyHighlight()">Apply</button>
+  <div class="bg-white rounded-lg p-6 shadow-xl max-w-md w-full mx-4">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-lg font-semibold">Highlight Color</h3>
+      <button 
+        class="text-gray-400 hover:text-gray-600"
+        (click)="showHighlightPicker = false">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    
+    <!-- Common Colors Grid -->
+    <div class="mb-4">
+      <label class="block text-sm font-medium text-gray-700 mb-2">Common Highlight Colors</label>
+      <div class="grid grid-cols-8 gap-2">
+        <button
+          *ngFor="let color of commonHighlightColors"
+          class="w-8 h-8 rounded border-2 hover:border-gray-400 transition-colors"
+          [style.background-color]="color"
+          [class.border-blue-500]="currentHighlightColor === color"
+          [class.border-gray-400]="currentHighlightColor !== color && (color === '#FFFF00' || color === '#00FFFF' || color === '#FF00FF' || color === '#FFFACD' || color === '#D3D3D3')"
+          [class.border-gray-300]="currentHighlightColor !== color && !(color === '#FFFF00' || color === '#00FFFF' || color === '#FF00FF' || color === '#FFFACD' || color === '#D3D3D3')"
+          (click)="selectHighlightColor(color)"
+          [title]="color">
+        </button>
+      </div>
+    </div>
+
+    <!-- Custom Color -->
+    <div class="mb-4">
+      <label class="block text-sm font-medium text-gray-700 mb-2">Custom Color</label>
+      <div class="flex items-center gap-3">
+        <input
+          type="color"
+          [(ngModel)]="currentHighlightColor"
+          class="w-12 h-8 rounded border border-gray-300 cursor-pointer">
+        <span class="text-sm text-gray-600">{{ currentHighlightColor }}</span>
+      </div>
+    </div>
+
+    <!-- Remove Highlight Option -->
+    <div class="mb-4">
+      <button
+        class="w-full px-4 py-2 bg-red-50 text-red-600 border border-red-200 rounded hover:bg-red-100 transition-colors"
+        (click)="removeHighlight()">
+        <i class="fas fa-eraser mr-2"></i>
+        Remove Highlight
+      </button>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="flex gap-3 pt-4 border-t">
+      <button 
+        class="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition-colors" 
+        (click)="showHighlightPicker = false">
+        Cancel
+      </button>
+      <button 
+        class="flex-1 px-4 py-2 bg-[#6200EE] text-white rounded hover:bg-[#5000CC] transition-colors" 
+        (click)="applyHighlight()">
+        Apply
+      </button>
     </div>
   </div>
 </div>
@@ -396,3 +523,70 @@
   (save)="updateImage($event)"
   (cancel)="showImageEditDialog = false">
 </app-image-edit-dialog>
+
+<!-- Editor Component -->
+<app-editor
+  [documentId]="documentId"
+  (contentChange)="onEditorContentChange($event)">
+</app-editor>
+
+<!-- Metadata Toolbar -->
+<div class="fixed bottom-0 left-0 right-0 bg-white border-t px-4 py-2 flex items-center justify-between text-sm text-gray-600">
+  <!-- Left side stats -->
+  <div class="flex items-center gap-6">
+    <div class="flex items-center gap-2 min-w-[100px]">
+      <i class="fas fa-file-alt"></i>
+      <span>{{ wordCount }} words</span>
+    </div>
+    <div class="flex items-center gap-2 min-w-[100px]">
+      <i class="fas fa-clock"></i>
+      <span>{{ readingTime }} min read</span>
+    </div>
+    <div class="flex items-center gap-2 min-w-[120px]">
+      <i class="fas fa-paragraph"></i>
+      <span>{{ paragraphCount }} paragraphs</span>
+    </div>
+    <div class="flex items-center gap-2 min-w-[120px]">
+      <i class="fas fa-font"></i>
+      <span>{{ characterCount }} characters</span>
+    </div>
+  </div>
+
+  <!-- Right side stats -->
+  <div class="flex items-center gap-6">
+    <div class="flex items-center gap-2 min-w-[120px]">
+      <span>Page {{ currentPage }} of {{ pages.length }}</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <button 
+        class="hover:text-[#6200EE] transition-colors p-1"
+        (click)="previousPage()"
+        [disabled]="currentPage === 1"
+        title="Previous Page">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+      <button 
+        class="hover:text-[#6200EE] transition-colors p-1"
+        (click)="nextPage()"
+        [disabled]="currentPage === pages.length"
+        title="Next Page">
+        <i class="fas fa-chevron-right"></i>
+      </button>
+    </div>
+    <div class="flex items-center gap-2 min-w-[100px]">
+      <span>{{ currentZoom * 100 | number:'1.0-0' }}%</span>
+      <button 
+        class="hover:text-[#6200EE] transition-colors p-1"
+        (click)="zoomOut()"
+        title="Zoom Out">
+        <i class="fas fa-search-minus"></i>
+      </button>
+      <button 
+        class="hover:text-[#6200EE] transition-colors p-1"
+        (click)="zoomIn()"
+        title="Zoom In">
+        <i class="fas fa-search-plus"></i>
+      </button>
+    </div>
+  </div>
+</div>

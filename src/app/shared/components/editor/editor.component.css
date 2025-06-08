@@ -1,0 +1,187 @@
+.editor-container {
+  height: calc(100vh - 160px); /* Adjust based on toolbar and footer heights */
+  background-color: #f5f5f5;
+}
+
+.pages-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+/* A4 Page Styles */
+.page-wrapper {
+  margin-bottom: 2rem;
+}
+
+.page {
+  width: 210mm; /* A4 width */
+  height: 297mm; /* A4 height */
+  padding: 20mm; /* Standard margins */
+  background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  margin: 0 auto;
+  position: relative;
+  overflow: hidden;
+  transition: box-shadow 0.2s ease;
+}
+
+.page:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.page-content {
+  height: 100%;
+  position: relative;
+}
+
+.editor-content {
+  outline: none;
+  min-height: 100%;
+  padding: 1rem;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  cursor: text;
+}
+
+.editor-content:focus {
+  outline: none;
+}
+
+.editor-content p {
+  margin: 0 0 1em;
+  line-height: 1.5;
+}
+
+.editor-content:empty::before {
+  content: 'Click here to start typing...';
+  color: #9ca3af;
+  pointer-events: none;
+}
+
+/* Page number */
+.page-number {
+  position: absolute;
+  bottom: 10mm;
+  right: 10mm;
+  font-size: 0.8rem;
+  color: #666;
+}
+
+/* Add page button */
+.add-page-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  color: #4a5568;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin: 1rem auto;
+}
+
+.add-page-btn:hover {
+  background: #f8fafc;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Delete page button */
+.delete-page-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  color: #666;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.page:hover .delete-page-btn {
+  opacity: 1;
+}
+
+.delete-page-btn:hover {
+  background: #fee2e2;
+  color: #dc2626;
+  border-color: #dc2626;
+}
+
+/* Text content styles */
+.editor-content {
+  font-family: Arial, sans-serif;
+  font-size: 12pt;
+  line-height: 1.5;
+  color: #333;
+}
+
+.editor-content h1 { font-size: 24pt; margin: 1em 0 0.5em; }
+.editor-content h2 { font-size: 20pt; margin: 1em 0 0.5em; }
+.editor-content h3 { font-size: 16pt; margin: 1em 0 0.5em; }
+.editor-content h4 { font-size: 14pt; margin: 1em 0 0.5em; }
+.editor-content h5 { font-size: 12pt; margin: 1em 0 0.5em; }
+.editor-content h6 { font-size: 10pt; margin: 1em 0 0.5em; }
+
+.editor-content ul,
+.editor-content ol {
+  margin: 0 0 1em;
+  padding-left: 2em;
+}
+
+.editor-content li { margin: 0.5em 0; }
+
+.editor-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1em 0;
+}
+
+.editor-content th,
+.editor-content td {
+  border: 1px solid #ddd;
+  padding: 0.5em;
+}
+
+/* Scale content on zoom */
+.page-content {
+  transform-origin: top left;
+  transition: transform 0.2s ease;
+}
+
+/* Print styles */
+@media print {
+  .editor-container {
+    height: auto;
+    overflow: visible;
+    background: none;
+  }
+
+  .page {
+    box-shadow: none;
+    margin: 0;
+    padding: 0;
+    break-after: page;
+  }
+
+  .page-wrapper:last-child .page {
+    break-after: avoid;
+  }
+
+  .delete-page-btn,
+  .add-page-btn {
+    display: none !important;
+  }
+} 

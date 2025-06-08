@@ -1,0 +1,94 @@
+<!-- Editor Container with Pages -->
+<div class="editor-container bg-gray-100 flex-grow overflow-auto p-8">
+  <div class="pages-container mx-auto">
+    <div *ngFor="let page of pages; let i = index" class="page-wrapper mb-8">
+      <div class="page bg-white shadow-lg">
+        <div class="page-content" [attr.data-page]="i + 1">
+          <div class="editor-content" 
+               [attr.contenteditable]="true"
+               [innerHTML]="page.content | safeHtml"
+               (input)="onPageContentChange($event, i)"
+               (paste)="onPaste($event)"
+               #editorContent>
+          </div>
+        </div>
+        <div class="page-number absolute bottom-2 right-2 text-gray-400 text-sm">{{ i + 1 }}</div>
+        <!-- Delete page button -->
+        <button *ngIf="pages.length > 1"
+                class="delete-page-btn"
+                (click)="deletePage(i)"
+                title="Delete Page">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+    <!-- Add Page Button -->
+    <button 
+      class="add-page-btn mx-auto mb-8 flex items-center gap-2 px-4 py-2 rounded-lg bg-white shadow hover:shadow-md transition-shadow"
+      (click)="addNewPage()">
+      <i class="fas fa-plus"></i>
+      Add Page
+    </button>
+  </div>
+</div>
+
+<!-- Metadata Footer -->
+<div class="fixed bottom-0 left-0 right-0 bg-white border-t px-4 py-2 flex items-center justify-between text-sm text-gray-600">
+  <!-- Left side stats -->
+  <div class="flex items-center gap-6">
+    <div class="flex items-center gap-2 min-w-[100px]">
+      <i class="fas fa-file-alt"></i>
+      <span>{{ wordCount }} words</span>
+    </div>
+    <div class="flex items-center gap-2 min-w-[100px]">
+      <i class="fas fa-clock"></i>
+      <span>{{ readingTime }} min read</span>
+    </div>
+    <div class="flex items-center gap-2 min-w-[120px]">
+      <i class="fas fa-paragraph"></i>
+      <span>{{ paragraphCount }} paragraphs</span>
+    </div>
+    <div class="flex items-center gap-2 min-w-[120px]">
+      <i class="fas fa-font"></i>
+      <span>{{ characterCount }} characters</span>
+    </div>
+  </div>
+
+  <!-- Right side stats -->
+  <div class="flex items-center gap-6">
+    <div class="flex items-center gap-2 min-w-[120px]">
+      <span>Page {{ currentPage }} of {{ pages.length }}</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <button 
+        class="hover:text-[#6200EE] transition-colors p-1"
+        (click)="previousPage()"
+        [disabled]="currentPage === 1"
+        title="Previous Page">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+      <button 
+        class="hover:text-[#6200EE] transition-colors p-1"
+        (click)="nextPage()"
+        [disabled]="currentPage === pages.length"
+        title="Next Page">
+        <i class="fas fa-chevron-right"></i>
+      </button>
+    </div>
+    <div class="flex items-center gap-2 min-w-[100px]">
+      <span>{{ currentZoom * 100 | number:'1.0-0' }}%</span>
+      <button 
+        class="hover:text-[#6200EE] transition-colors p-1"
+        (click)="zoomOut()"
+        title="Zoom Out">
+        <i class="fas fa-search-minus"></i>
+      </button>
+      <button 
+        class="hover:text-[#6200EE] transition-colors p-1"
+        (click)="zoomIn()"
+        title="Zoom In">
+        <i class="fas fa-search-plus"></i>
+      </button>
+    </div>
+  </div>
+</div> 

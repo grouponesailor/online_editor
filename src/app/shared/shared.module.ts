@@ -6,21 +6,23 @@ import { ToolbarComponent } from './components/toolbar/toolbar.component';
 import { ShareDialogComponent } from './components/share-dialog/share-dialog.component';
 import { ImageEditDialogComponent } from './components/image-edit-dialog/image-edit-dialog.component';
 import { CommentsSidebarComponent } from './components/comments-sidebar/comments-sidebar.component';
-
-// Import File Module components
-import { FileModule } from '../features/file/file.module';
+import { SafeHtmlPipe } from './pipes/safe-html.pipe';
+import { FileToolbarComponent } from './components/file-toolbar/file-toolbar.component';
+import { EditorComponent } from './components/editor/editor.component';
 
 @NgModule({
   declarations: [
     ToolbarComponent,
     ShareDialogComponent,
     ImageEditDialogComponent,
-    CommentsSidebarComponent
+    CommentsSidebarComponent,
+    SafeHtmlPipe,
+    FileToolbarComponent,
+    EditorComponent
   ],
   imports: [
     CommonModule,
-    FormsModule,
-    FileModule
+    FormsModule
   ],
   exports: [
     CommonModule,
@@ -28,7 +30,10 @@ import { FileModule } from '../features/file/file.module';
     ToolbarComponent,
     ShareDialogComponent,
     ImageEditDialogComponent,
-    CommentsSidebarComponent
+    CommentsSidebarComponent,
+    SafeHtmlPipe,
+    FileToolbarComponent,
+    EditorComponent
   ]
 })
 export class SharedModule { }

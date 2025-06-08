@@ -30,6 +30,7 @@ import { NetworkConfigService } from '../../../../core/services/network-config.s
 import { ShareService } from '../../../../core/services/share.service';
 import { FileService } from '../../../file/services/file.service';
 import { Subject, takeUntil, debounceTime } from 'rxjs';
+import { EditorService } from '../../../../core/services/editor.service';
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -155,7 +156,8 @@ export class EditorComponent implements OnInit, OnDestroy, AfterViewInit {
     private route: ActivatedRoute,
     private networkConfigService: NetworkConfigService,
     private shareService: ShareService,
-    private fileService: FileService
+    private fileService: FileService,
+    private editorService: EditorService
   ) {
     // Initialize Yjs document
     this.ydoc = new Y.Doc();
@@ -223,6 +225,7 @@ export class EditorComponent implements OnInit, OnDestroy, AfterViewInit {
     this.editor?.destroy();
     this.ydoc.destroy();
     this.provider?.destroy();
+    this.editorService.setEditor(null);
   }
 
   private loadDocumentName() {
@@ -387,6 +390,8 @@ export class EditorComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private initializeEditor() {
+    if (!this.editorElement) return;
+
     const extensions = [
       StarterKit.configure({
         codeBlock: false,
@@ -575,7 +580,7 @@ export class EditorComponent implements OnInit, OnDestroy, AfterViewInit {
           return false;
         },
       },
-      onUpdate: () => {
+      onUpdate: ({ editor }) => {
         // Trigger auto-save for offline mode
         if (this.networkStatus === 'offline') {
           this.hasOfflineChanges = true;
@@ -611,6 +616,9 @@ export class EditorComponent implements OnInit, OnDestroy, AfterViewInit {
     } else {
       this.loadOfflineDocument();
     }
+
+    // Share editor instance through service
+    this.editorService.setEditor(this.editor);
   }
 
   private loadOfflineDocument() {

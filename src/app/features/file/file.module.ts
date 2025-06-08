@@ -6,12 +6,10 @@ import { FileRoutingModule } from './file-routing.module';
 import { FileService } from './services/file.service';
 
 import { FileManagerComponent } from './components/file-manager/file-manager.component';
-import { FileToolbarComponent } from './components/file-toolbar/file-toolbar.component';
 
 @NgModule({
   declarations: [
-    FileManagerComponent,
-    FileToolbarComponent
+    FileManagerComponent
   ],
   imports: [
     CommonModule,
@@ -21,8 +19,6 @@ import { FileToolbarComponent } from './components/file-toolbar/file-toolbar.com
   providers: [
     FileService
   ],
-  exports: [
-    FileToolbarComponent
-  ]
+  exports: []
 })
 export class FileModule { }

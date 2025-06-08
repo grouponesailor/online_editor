@@ -1,8 +1,11 @@
-import { Component, Input, OnInit, OnDestroy, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, OnChanges, SimpleChanges, ViewChild, ElementRef, AfterViewInit, Output, EventEmitter } from '@angular/core';
 import { Editor } from '@tiptap/core';
 import { Shape as ShapeExtension } from '../../../extensions/shape';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { Subject, takeUntil } from 'rxjs';
+import StarterKit from '@tiptap/starter-kit';
+import { EditorService } from 'src/app/core/services/editor.service';
+import { CommentsService } from '../../services/comments.service';
 
 interface FontFamily {
   label: string;
@@ -37,17 +40,25 @@ interface ShapeDefinition {
   svgPath: string;
 }
 
+interface Page {
+  content: string;
+  paragraphCount: number;
+}
+
 @Component({
   selector: 'app-toolbar',
   templateUrl: './toolbar.component.html',
   styleUrls: ['./toolbar.component.css']
 })
-export class ToolbarComponent implements OnInit, OnDestroy, OnChanges {
-  @Input() editor: Editor | null = null;
+export class ToolbarComponent implements OnInit, OnDestroy, OnChanges, AfterViewInit {
+  @ViewChild('editorContent') editorContent!: ElementRef;
   @Input() documentId: string = '';
+  @Output() contentChange = new EventEmitter<string[]>();
+
+  editor: Editor | null = null;
 
   // UI state
-  currentTab: string = 'file';
+  currentTab: string = 'home';
   currentZoom: number = 1;
   showShareDialog = false;
   showTextColorPicker = false;
@@ -69,11 +80,79 @@ export class ToolbarComponent implements OnInit, OnDestroy, OnChanges {
   currentHighlightColor = '#FFEB3B';
   tableSelection = { row: 0, col: 0 };
 
+  // Common color presets
+  commonTextColors = [
+    '#000000', // Black
+    '#FFFFFF', // White
+    '#FF0000', // Red
+    '#00FF00', // Green
+    '#0000FF', // Blue
+    '#FFFF00', // Yellow
+    '#FF00FF', // Magenta
+    '#00FFFF', // Cyan
+    '#FFA500', // Orange
+    '#800080', // Purple
+    '#A52A2A', // Brown
+    '#808080', // Gray
+    '#000080', // Navy
+    '#008000', // Dark Green
+    '#800000', // Maroon
+    '#FFC0CB'  // Pink
+  ];
+
+  commonHighlightColors = [
+    '#FFFF00', // Yellow
+    '#00FF00', // Green
+    '#00FFFF', // Cyan
+    '#FF00FF', // Magenta
+    '#FFA500', // Orange
+    '#FF0000', // Red
+    '#FFB6C1', // Light Pink
+    '#98FB98', // Pale Green
+    '#87CEEB', // Sky Blue
+    '#DDA0DD', // Plum
+    '#F0E68C', // Khaki
+    '#FFE4B5', // Moccasin
+    '#E6E6FA', // Lavender
+    '#FFFACD', // Lemon Chiffon
+    '#F5DEB3', // Wheat
+    '#D3D3D3'  // Light Gray
+  ];
+
+  // Metadata properties
+  wordCount: number = 0;
+  readingTime: number = 0;
+  paragraphCount: number = 0;
+  currentPage: number = 1;
+  totalPages: number = 1;
+  characterCount: number = 0;
+
+  // Page management
+  pages: Page[] = [{ content: '', paragraphCount: 0 }];
+  readonly WORDS_PER_PAGE = 500; // Approximate words that fit on an A4 page
+  readonly CHARACTERS_PER_LINE = 90; // Approximate characters that fit on a line
+  readonly LINES_PER_PAGE = 40; // Approximate lines that fit on an A4 page
+
   private destroy$ = new Subject<void>();
 
-  constructor(private sanitizer: DomSanitizer) {}
+  constructor(
+    private sanitizer: DomSanitizer,
+    private editorService: EditorService,
+    private commentsService: CommentsService
+  ) {}
 
   ngOnInit() {
+    // Subscribe to editor instance from service
+    this.editorService.editor$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((editor: Editor | null) => {
+        this.editor = editor;
+        if (this.editor) {
+          this.setupEditorListeners();
+          this.updateMetadata();
+        }
+      });
+
     // Close dropdowns when clicking outside
     document.addEventListener('click', (event) => {
       const target = event.target as HTMLElement;
@@ -82,13 +161,47 @@ export class ToolbarComponent implements OnInit, OnDestroy, OnChanges {
         this.showTableMenu = false;
         this.showImageMenu = false;
         this.showLineSpacingMenu = false;
+        this.showListMenu = false;
+      }
+      // Close color pickers when clicking outside
+      if (!target.closest('.fixed') && !target.closest('[data-color-trigger]')) {
         this.showTextColorPicker = false;
         this.showHighlightPicker = false;
       }
     });
+
+    this.initializeEditor();
+    this.setupPageBreakDetection();
+  }
+
+  ngAfterViewInit() {
+    this.initEditor();
+    this.updatePageMetrics();
+  }
+
+  private initEditor() {
+    if (this.editorContent) {
+      this.editor = new Editor({
+        element: this.editorContent.nativeElement,
+        extensions: [
+          StarterKit,
+          // Add other extensions as needed
+        ],
+        content: '',
+        onUpdate: ({ editor }) => {
+          this.updateMetadata();
+        },
+        onSelectionUpdate: ({ editor }) => {
+          this.updateCurrentFormatting();
+        }
+      });
+
+      this.setupEditorListeners();
+    }
   }
 
   ngOnDestroy() {
+    this.editor?.destroy();
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -96,6 +209,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, OnChanges {
   ngOnChanges(changes: SimpleChanges) {
     if (changes['editor'] && this.editor) {
       this.setupEditorListeners();
+      this.setupMetadataListeners();
     }
   }
 
@@ -390,6 +504,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, OnChanges {
 
     this.editor.on('transaction', () => {
       this.updateCurrentFormatting();
+      this.updatePages();
     });
   }
 
@@ -416,6 +531,12 @@ export class ToolbarComponent implements OnInit, OnDestroy, OnChanges {
     const colorMark = this.editor.getAttributes('textStyle');
     if (colorMark['color']) {
       this.currentTextColor = colorMark['color'];
+    }
+
+    // Update highlight color
+    const highlightMark = this.editor.getAttributes('highlight');
+    if (highlightMark['color']) {
+      this.currentHighlightColor = highlightMark['color'];
     }
 
     // Update current heading
@@ -612,41 +733,75 @@ export class ToolbarComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   zoomIn() {
-    this.currentZoom = Math.min(this.currentZoom + 0.25, 2);
-    this.setZoom();
+    if (this.currentZoom < 2) {
+      this.currentZoom += 0.1;
+      this.applyZoom();
+    }
   }
 
   zoomOut() {
-    this.currentZoom = Math.max(this.currentZoom - 0.25, 0.5);
-    this.setZoom();
+    if (this.currentZoom > 0.5) {
+      this.currentZoom -= 0.1;
+      this.applyZoom();
+    }
   }
 
-  setZoom() {
-    const editorElement = this.editor?.view.dom as HTMLElement;
-    if (editorElement) {
-      editorElement.style.transform = `scale(${this.currentZoom})`;
-      editorElement.style.transformOrigin = 'top left';
-      editorElement.parentElement?.classList.add('overflow-auto');
-    }
+  private applyZoom() {
+    const pages = document.querySelectorAll('.page-content');
+    pages.forEach(page => {
+      (page as HTMLElement).style.transform = `scale(${this.currentZoom})`;
+    });
   }
 
   // Text color methods
   toggleTextColor() {
     this.showTextColorPicker = !this.showTextColorPicker;
+    // Close highlight picker if open
+    if (this.showTextColorPicker) {
+      this.showHighlightPicker = false;
+    }
+  }
+
+  selectTextColor(color: string) {
+    this.currentTextColor = color;
+    this.applyTextColor();
   }
 
   applyTextColor() {
-    this.editor?.chain().focus().setMark('textStyle', { color: this.currentTextColor }).run();
+    if (!this.editor) return;
+    this.editor.chain().focus().setMark('textStyle', { color: this.currentTextColor }).run();
+    this.showTextColorPicker = false;
+  }
+
+  removeTextColor() {
+    if (!this.editor) return;
+    this.editor.chain().focus().unsetMark('textStyle').run();
     this.showTextColorPicker = false;
   }
 
   // Highlight methods
   toggleHighlight() {
     this.showHighlightPicker = !this.showHighlightPicker;
+    // Close text color picker if open
+    if (this.showHighlightPicker) {
+      this.showTextColorPicker = false;
+    }
+  }
+
+  selectHighlightColor(color: string) {
+    this.currentHighlightColor = color;
+    this.applyHighlight();
   }
 
   applyHighlight() {
-    this.editor?.chain().focus().setMark('highlight', { color: this.currentHighlightColor }).run();
+    if (!this.editor) return;
+    this.editor.chain().focus().setMark('highlight', { color: this.currentHighlightColor }).run();
+    this.showHighlightPicker = false;
+  }
+
+  removeHighlight() {
+    if (!this.editor) return;
+    this.editor.chain().focus().unsetMark('highlight').run();
     this.showHighlightPicker = false;
   }
 
@@ -722,5 +877,167 @@ export class ToolbarComponent implements OnInit, OnDestroy, OnChanges {
     if (this.editor) {
       this.editor.chain().focus().toggleTaskList().run();
     }
+  }
+
+  private setupMetadataListeners() {
+    if (!this.editor) return;
+
+    // Update metadata when content changes
+    this.editor.on('update', () => {
+      this.updateMetadata();
+    });
+  }
+
+  private updatePages() {
+    if (!this.editor) return;
+
+    const content = this.editor.getHTML();
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = content;
+    
+    const paragraphs = tempDiv.getElementsByTagName('p');
+    const newPages: Page[] = [{ content: '', paragraphCount: 0 }];
+    let currentPage = 0;
+    let currentPageHeight = 0;
+    const PAGE_HEIGHT = 257; // height in mm of A4 page minus margins
+
+    // Process each paragraph
+    Array.from(paragraphs).forEach((p) => {
+      const clone = p.cloneNode(true) as HTMLElement;
+      const tempContainer = document.createElement('div');
+      tempContainer.appendChild(clone);
+      
+      // Add paragraph to current page
+      if (newPages[currentPage].content) {
+        newPages[currentPage].content += tempContainer.innerHTML;
+      } else {
+        newPages[currentPage].content = tempContainer.innerHTML;
+      }
+      newPages[currentPage].paragraphCount++;
+
+      // Estimate height (this is approximate)
+      currentPageHeight += 20; // Assume average paragraph height
+      
+      // Check if we need a new page
+      if (currentPageHeight > PAGE_HEIGHT) {
+        currentPage++;
+        currentPageHeight = 0;
+        newPages.push({ content: '', paragraphCount: 0 });
+      }
+    });
+
+    this.pages = newPages;
+    this.updateMetadata();
+  }
+
+  private updateMetadata() {
+    if (!this.editor) return;
+
+    const content = this.editor.getText();
+    
+    // Calculate character count
+    this.characterCount = content.length;
+    
+    // Calculate word count
+    this.wordCount = content.trim().split(/\s+/).filter(word => word.length > 0).length;
+
+    // Calculate reading time (assuming average reading speed of 200 words per minute)
+    this.readingTime = Math.max(1, Math.ceil(this.wordCount / 200));
+
+    // Calculate paragraph count
+    const paragraphs = this.editor.getHTML().split('</p>').length - 1;
+    this.paragraphCount = Math.max(1, paragraphs);
+
+    // Calculate total pages (assuming ~500 words per page)
+    this.totalPages = Math.max(1, Math.ceil(this.wordCount / 500));
+    
+    // Ensure current page is valid
+    this.currentPage = Math.min(this.currentPage, this.totalPages);
+  }
+
+  previousPage() {
+    if (this.currentPage > 1) {
+      this.currentPage--;
+      this.scrollToPage(this.currentPage);
+    }
+  }
+
+  nextPage() {
+    if (this.currentPage < this.totalPages) {
+      this.currentPage++;
+      this.scrollToPage(this.currentPage);
+    }
+  }
+
+  private scrollToPage(pageNumber: number) {
+    const pageElement = document.querySelector(`[data-page="${pageNumber}"]`);
+    if (pageElement) {
+      pageElement.scrollIntoView({ behavior: 'smooth' });
+    }
+  }
+
+  private initializeEditor() {
+    // Add page break detection
+    this.editor?.on('update', () => {
+      this.detectPageBreaks();
+      this.updateDocumentStats();
+    });
+  }
+
+  private setupPageBreakDetection() {
+    // Create an observer to watch for content changes
+    const observer = new ResizeObserver(() => {
+      this.detectPageBreaks();
+    });
+
+    // Observe the editor content
+    if (this.editorContent?.nativeElement) {
+      observer.observe(this.editorContent.nativeElement);
+    }
+  }
+
+  private detectPageBreaks() {
+    if (!this.editorContent?.nativeElement) return;
+
+    const content = this.editorContent.nativeElement;
+    const contentHeight = content.scrollHeight;
+    const pageHeight = 257; // Height in mm (297mm - 40mm margins)
+    const pageCount = Math.ceil(contentHeight / pageHeight);
+
+    // Update pages array if needed
+    if (pageCount > this.pages.length) {
+      while (this.pages.length < pageCount) {
+        this.addNewPage();
+      }
+    }
+  }
+
+  addNewPage() {
+    this.pages.push({ content: '', paragraphCount: 0 });
+    this.updatePageMetrics();
+  }
+
+  private updatePageMetrics() {
+    // Update page numbers and other metrics
+    this.updateDocumentStats();
+  }
+
+  private updateDocumentStats() {
+    if (!this.editor) return;
+
+    const text = this.editor.getText();
+    this.wordCount = text.split(/\s+/).filter(word => word.length > 0).length;
+    this.characterCount = text.length;
+    this.paragraphCount = (text.match(/\n\n/g) || []).length + 1;
+    this.readingTime = Math.ceil(this.wordCount / 200); // Assuming 200 words per minute
+  }
+
+  // Editor content change handler
+  onEditorContentChange(content: string[]) {
+    this.contentChange.emit(content);
+  }
+
+  toggleComments() {
+    this.commentsService.toggleSidebar();
   }
 }
