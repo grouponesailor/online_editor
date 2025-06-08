@@ -48,7 +48,11 @@ const FontSize = Mark.create({
     return {
       size: {
         default: null,
-        parseHTML: element => element.style.fontSize,
+        parseHTML: element => {
+          // Get font size from style attribute
+          const fontSize = element.style.fontSize;
+          return fontSize ? fontSize : null;
+        },
         renderHTML: attributes => {
           if (!attributes['size']) {
             return {}
@@ -64,7 +68,12 @@ const FontSize = Mark.create({
   parseHTML() {
     return [
       {
+        tag: 'span',
         style: 'font-size',
+        getAttrs: (element) => {
+          const fontSize = (element as HTMLElement).style.fontSize;
+          return fontSize ? { size: fontSize } : false;
+        },
       },
     ]
   },
