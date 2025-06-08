@@ -118,4 +118,25 @@
   font-size: 0.875rem;
   color: #6b7280;
   font-weight: 500;
+}
+
+/* Shape menu styles */
+.shape-menu-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.shape-menu-icon svg {
+  width: 20px;
+  height: 20px;
+  margin-right: 8px;
+}
+
+.shape-menu-icon svg path {
+  transition: all 0.2s ease;
+}
+
+button:hover .shape-menu-icon svg path {
+  stroke: #6200EE;
 } 

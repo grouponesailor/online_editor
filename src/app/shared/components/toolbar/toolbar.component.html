@@ -282,8 +282,8 @@
             *ngFor="let shape of shapes"
             class="block w-full px-4 py-2 text-left hover:bg-gray-100 text-sm flex items-center"
             (click)="insertShape(shape)">
-            <svg class="w-4 h-4 mr-2" viewBox="0 0 24 24">
-              <path [attr.d]="shape.svgPath" fill="currentColor"/>
+            <svg class="w-5 h-5 mr-2" viewBox="0 0 24 24">
+              <path [attr.d]="shape.svgPath" fill="none" stroke="currentColor" stroke-width="1.5"/>
             </svg>
             {{ shape.name }}
           </button>

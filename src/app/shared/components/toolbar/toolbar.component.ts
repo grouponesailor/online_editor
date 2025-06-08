@@ -374,37 +374,37 @@ export class ToolbarComponent implements OnInit, OnDestroy, OnChanges {
     {
       id: 'rectangle',
       name: 'Rectangle',
-      svgPath: '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"/></svg>'
+      svgPath: 'M2 2h20v20H2z'
     },
     {
       id: 'circle',
       name: 'Circle',
-      svgPath: '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/></svg>'
+      svgPath: 'M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z'
     },
     {
       id: 'triangle',
       name: 'Triangle',
-      svgPath: '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L22 22H2L12 2Z" fill="none" stroke="currentColor" stroke-width="2"/></svg>'
+      svgPath: 'M12 2L22 22H2L12 2z'
     },
     {
       id: 'star',
       name: 'Star',
-      svgPath: '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="none" stroke="currentColor" stroke-width="2"/></svg>'
+      svgPath: 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z'
     },
     {
       id: 'hexagon',
       name: 'Hexagon',
-      svgPath: `<svg viewBox="0 0 32 32"><path d="M16 4 L26 10 L26 22 L16 28 L6 22 L6 10 Z" fill="none" stroke="currentColor" stroke-width="2"/></svg>`
+      svgPath: 'M12 2l8.66 5v10L12 22l-8.66-5V7L12 2z'
     },
     {
       id: 'diamond',
       name: 'Diamond',
-      svgPath: `<svg viewBox="0 0 32 32"><path d="M16 4 L28 16 L16 28 L4 16 Z" fill="none" stroke="currentColor" stroke-width="2"/></svg>`
+      svgPath: 'M12 2L22 12L12 22L2 12L12 2z'
     },
     {
       id: 'cloud',
       name: 'Cloud',
-      svgPath: `<svg viewBox="0 0 32 32"><path d="M8 16 C8 12 10 8 16 8 C22 8 24 12 24 16 C28 16 28 20 28 20 C28 24 24 24 24 24 L12 24 C12 24 4 24 4 20 C4 16 8 16 8 16 Z" fill="none" stroke="currentColor" stroke-width="2"/></svg>`
+      svgPath: 'M5.5 16a3.5 3.5 0 0 1-.369-6.98 4 4 0 1 1 7.753-1.977A4.5 4.5 0 1 1 15.5 16h-10z'
     }
   ];
 
