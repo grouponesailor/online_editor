@@ -3,7 +3,7 @@ import { Component } from '@angular/core';
 @Component({
   selector: 'app-root',
   template: `
-    <div class="min-h-screen flex flex-col">
+    <div class="min-h-screen">
       <header class="bg-white border-b">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div class="flex justify-between items-center h-16">
@@ -16,7 +16,7 @@ import { Component } from '@angular/core';
               </button>
             </div>
             <div class="flex-1 flex justify-center">
-              <h1 class="text-3xl font-semibold text-gray-900">Body Builder</h1>
+              <h1 class="text-3xl font-semibold text-gray-900">Collaborative Document Editor</h1>
             </div>
             <div class="flex items-center space-x-4">
               <button class="text-gray-500 hover:text-[#6200EE] transition-colors">
@@ -37,5 +37,5 @@ import { Component } from '@angular/core';
   `
 })
 export class AppComponent {
-  title = 'body-builder';
+  title = 'Collaborative Document Editor';
 }

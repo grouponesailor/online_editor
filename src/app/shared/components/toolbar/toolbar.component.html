@@ -8,8 +8,7 @@
       [class.border-b-2]="currentTab === tab.id"
       [class.border-blue-600]="currentTab === tab.id"
       (click)="currentTab = tab.id">
-      <i *ngIf="tab.icon" [class]="tab.icon"></i>
-      <img *ngIf="tab.iconUrl" [src]="tab.iconUrl" alt="" class="w-4 h-4">
+      <i [class]="tab.icon"></i>
       {{ tab.label }}
     </button>
   </div>
@@ -31,14 +30,14 @@
     <!-- Clipboard -->
     <div class="flex gap-1 border-r pr-2">
       <button
-        class="p-2 rounded hover:bg-gray-100 hover:text-[#6200EE] transition-colors"
+        class="p-2 rounded hover:bg-gray-100"
         (click)="handleUndo()"
         [disabled]="!canUndo()"
         title="Undo">
         <i class="fas fa-undo"></i>
       </button>
       <button
-        class="p-2 rounded hover:bg-gray-100 hover:text-[#6200EE] transition-colors"
+        class="p-2 rounded hover:bg-gray-100"
         (click)="handleRedo()"
         [disabled]="!canRedo()"
         title="Redo">
@@ -49,17 +48,42 @@
     <!-- Share Button -->
     <div class="flex gap-1 border-r pr-2">
       <button
-        class="p-2 rounded hover:bg-gray-100 hover:text-[#6200EE] transition-colors"
+        class="p-2 rounded hover:bg-gray-100"
         (click)="toggleShareDialog()"
         title="Share Document">
         <i class="fas fa-share-alt"></i>
       </button>
     </div>
 
+    <!-- Headings -->
+    <div class="flex gap-1 border-r pr-2">
+      <div class="relative">
+        <button
+          class="p-2 rounded hover:bg-gray-100 flex items-center min-w-[120px] justify-between text-sm"
+          (click)="showHeadingMenu = !showHeadingMenu"
+          title="Select Heading Level">
+          <span>{{ getCurrentHeadingLabel() }}</span>
+          <i class="fas fa-chevron-down ml-1 text-xs"></i>
+        </button>
+        <div *ngIf="showHeadingMenu" class="absolute top-full left-0 mt-1 bg-white shadow-lg rounded py-1 z-50 w-56 heading-dropdown">
+          <button
+            *ngFor="let heading of headingItems"
+            class="block w-full px-4 py-2 text-left hover:bg-gray-100 text-sm flex justify-between items-center"
+            [class.bg-blue-50]="heading.value === currentHeading"
+            [class.font-semibold]="heading.value === currentHeading"
+            [attr.data-heading]="heading.value"
+            (click)="setHeading(heading.value)">
+            <span>{{ heading.label }}</span>
+            <span class="text-xs text-gray-400">{{ heading.shortcut }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Font -->
     <div class="flex gap-1 border-r pr-2">
       <select
-        class="rounded border px-2 hover:border-[#6200EE] focus:border-[#6200EE] transition-colors"
+        class="rounded border px-2"
         (change)="setFontFamily($event)"
         [value]="currentFontFamily">
         <option *ngFor="let font of fontFamilies" [value]="font.value">
@@ -67,7 +91,7 @@
         </option>
       </select>
       <select
-        class="rounded border px-2 w-20 hover:border-[#6200EE] focus:border-[#6200EE] transition-colors"
+        class="rounded border px-2 w-20"
         (change)="setFontSize($event)"
         [value]="currentFontSize">
         <option *ngFor="let size of fontSizes" [value]="size.value">
@@ -80,7 +104,7 @@
     <div class="flex gap-1 border-r pr-2">
       <button
         *ngFor="let item of textFormatItems"
-        class="p-2 rounded hover:bg-gray-100 hover:text-[#6200EE] transition-colors"
+        class="p-2 rounded hover:bg-gray-100"
         [class.bg-gray-200]="editor?.isActive(item.type)"
         (click)="item.command(editor)"
         [title]="item.label">
@@ -92,7 +116,7 @@
     <div class="flex gap-1 border-r pr-2">
       <button
         *ngFor="let item of alignmentItems"
-        class="p-2 rounded hover:bg-gray-100 hover:text-[#6200EE] transition-colors"
+        class="p-2 rounded hover:bg-gray-100"
         [class.bg-gray-200]="editor?.isActive({ textAlign: item.align })"
         (click)="item.command(editor)"
         [title]="item.label">

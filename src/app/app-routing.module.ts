@@ -2,9 +2,9 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 
 const routes: Routes = [
-  { path: '', redirectTo: '/editor/new', pathMatch: 'full' },
+  { path: '', redirectTo: '/documents/new', pathMatch: 'full' },
   { 
-    path: 'editor', 
+    path: 'documents', 
     loadChildren: () => import('./features/editor/editor.module').then(m => m.EditorModule)
   },
   { 

@@ -1,7 +1,8 @@
-import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, OnChanges, SimpleChanges } from '@angular/core';
 import { Editor } from '@tiptap/core';
 import { Shape as ShapeExtension } from '../../../extensions/shape';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { Subject, takeUntil } from 'rxjs';
 
 interface FontFamily {
   label: string;
@@ -27,8 +28,7 @@ interface ImageEdit {
 interface ToolbarTab {
   id: string;
   label: string;
-  icon?: string;
-  iconUrl?: string;
+  icon: string;
 }
 
 interface ShapeDefinition {
@@ -42,7 +42,7 @@ interface ShapeDefinition {
   templateUrl: './toolbar.component.html',
   styleUrls: ['./toolbar.component.css']
 })
-export class ToolbarComponent implements OnChanges {
+export class ToolbarComponent implements OnInit, OnDestroy, OnChanges {
   @Input() editor: Editor | null = null;
   @Input() documentId: string = '';
 
@@ -56,17 +56,47 @@ export class ToolbarComponent implements OnChanges {
   showTableMenu = false;
   showImageMenu = false;
   showImageEditDialog = false;
+  showHeadingMenu = false;
   formatPainterActive = false;
   selectedImage: any = null;
 
   // Current selections
   currentFontFamily = 'Arial, sans-serif';
   currentFontSize = '12';
+  currentHeading = 'paragraph';
   currentTextColor = '#000000';
   currentHighlightColor = '#FFEB3B';
   tableSelection = { row: 0, col: 0 };
 
+  private destroy$ = new Subject<void>();
+
   constructor(private sanitizer: DomSanitizer) {}
+
+  ngOnInit() {
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', (event) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.relative')) {
+        this.showHeadingMenu = false;
+        this.showTableMenu = false;
+        this.showImageMenu = false;
+        this.showLineSpacingMenu = false;
+        this.showTextColorPicker = false;
+        this.showHighlightPicker = false;
+      }
+    });
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['editor'] && this.editor) {
+      this.setupEditorListeners();
+    }
+  }
 
   // Options
   fontFamilies: FontFamily[] = [
@@ -99,11 +129,56 @@ export class ToolbarComponent implements OnChanges {
     { label: '72pt', value: '72' }
   ];
 
+  headingItems = [
+    {
+      label: 'Paragraph',
+      value: 'paragraph',
+      shortcut: 'Ctrl+Alt+0',
+      command: (editor: Editor | null) => editor?.chain().focus().setParagraph().run()
+    },
+    {
+      label: 'Heading 1',
+      value: 'h1',
+      shortcut: 'Ctrl+Alt+1',
+      command: (editor: Editor | null) => editor?.chain().focus().toggleHeading({ level: 1 }).run()
+    },
+    {
+      label: 'Heading 2', 
+      value: 'h2',
+      shortcut: 'Ctrl+Alt+2',
+      command: (editor: Editor | null) => editor?.chain().focus().toggleHeading({ level: 2 }).run()
+    },
+    {
+      label: 'Heading 3',
+      value: 'h3', 
+      shortcut: 'Ctrl+Alt+3',
+      command: (editor: Editor | null) => editor?.chain().focus().toggleHeading({ level: 3 }).run()
+    },
+    {
+      label: 'Heading 4',
+      value: 'h4',
+      shortcut: 'Ctrl+Alt+4',
+      command: (editor: Editor | null) => editor?.chain().focus().toggleHeading({ level: 4 }).run()
+    },
+    {
+      label: 'Heading 5',
+      value: 'h5',
+      shortcut: 'Ctrl+Alt+5',
+      command: (editor: Editor | null) => editor?.chain().focus().toggleHeading({ level: 5 }).run()
+    },
+    {
+      label: 'Heading 6',
+      value: 'h6',
+      shortcut: 'Ctrl+Alt+6',
+      command: (editor: Editor | null) => editor?.chain().focus().toggleHeading({ level: 6 }).run()
+    }
+  ];
+
   tabs: ToolbarTab[] = [
-    { id: 'file', label: 'File', iconUrl: 'https://cdn3.iconfinder.com/data/icons/feather-5/24/file-text-64.png' },
     { id: 'home', label: 'Home', icon: 'fas fa-home' },
     { id: 'insert', label: 'Insert', icon: 'fas fa-plus' },
     { id: 'shapes', label: 'Shapes', icon: 'fas fa-shapes' },
+    { id: 'format', label: 'Format', icon: 'fas fa-palette' },
     { id: 'view', label: 'View', icon: 'fas fa-eye' }
   ];
 
@@ -198,35 +273,29 @@ export class ToolbarComponent implements OnChanges {
   alignmentItems = [
     {
       label: 'Align Left',
-      command: (editor: Editor | null) => editor?.chain().focus().updateAttributes('paragraph', { textAlign: 'left' }).run(),
+      command: (editor: Editor | null) => editor?.chain().focus().setTextAlign('left').run(),
       align: 'left',
       icon: 'fas fa-align-left'
     },
     {
       label: 'Align Center',
-      command: (editor: Editor | null) => editor?.chain().focus().updateAttributes('paragraph', { textAlign: 'center' }).run(),
+      command: (editor: Editor | null) => editor?.chain().focus().setTextAlign('center').run(),
       align: 'center',
       icon: 'fas fa-align-center'
     },
     {
       label: 'Align Right',
-      command: (editor: Editor | null) => editor?.chain().focus().updateAttributes('paragraph', { textAlign: 'right' }).run(),
+      command: (editor: Editor | null) => editor?.chain().focus().setTextAlign('right').run(),
       align: 'right',
       icon: 'fas fa-align-right'
     },
     {
       label: 'Justify',
-      command: (editor: Editor | null) => editor?.chain().focus().updateAttributes('paragraph', { textAlign: 'justify' }).run(),
+      command: (editor: Editor | null) => editor?.chain().focus().setTextAlign('justify').run(),
       align: 'justify',
       icon: 'fas fa-align-justify'
     }
   ];
-
-  ngOnChanges(changes: SimpleChanges) {
-    if (changes['editor'] && this.editor) {
-      this.setupEditorListeners();
-    }
-  }
 
   setupEditorListeners() {
     if (!this.editor) return;
@@ -265,6 +334,24 @@ export class ToolbarComponent implements OnChanges {
     if (colorMark['color']) {
       this.currentTextColor = colorMark['color'];
     }
+
+    // Update current heading
+    this.updateCurrentHeading();
+  }
+
+  private updateCurrentHeading() {
+    if (!this.editor) return;
+
+    // Check which heading level is active
+    for (let level = 1; level <= 6; level++) {
+      if (this.editor.isActive('heading', { level })) {
+        this.currentHeading = `h${level}`;
+        return;
+      }
+    }
+
+    // If no heading is active, it's a paragraph
+    this.currentHeading = 'paragraph';
   }
 
   // Font handling
@@ -497,5 +584,22 @@ export class ToolbarComponent implements OnChanges {
       // Apply stored formatting
       console.log('Format painter deactivated');
     }
+  }
+
+  // Heading functionality
+  setHeading(headingValue: string) {
+    if (!this.editor) return;
+
+    const headingItem = this.headingItems.find(item => item.value === headingValue);
+    if (headingItem) {
+      headingItem.command(this.editor);
+      this.currentHeading = headingValue;
+      this.showHeadingMenu = false;
+    }
+  }
+
+  getCurrentHeadingLabel(): string {
+    const headingItem = this.headingItems.find(item => item.value === this.currentHeading);
+    return headingItem ? headingItem.label : 'Paragraph';
   }
 }
