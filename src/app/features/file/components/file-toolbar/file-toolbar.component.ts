@@ -289,10 +289,10 @@ export class FileToolbarComponent {
 
   private escapeXml(text: string): string {
     return text
-      .replace(/&/g, '&')
-      .replace(/</g, '<')
-      .replace(/>/g, '>')
-      .replace(/"/g, '"')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
       .replace(/'/g, '&apos;');
   }
 
@@ -301,7 +301,167 @@ export class FileToolbarComponent {
   }
 
   onPrint() {
-    window.print();
+    // Prepare the document for printing
+    this.preparePrintDocument();
+    
+    // Show print dialog after a brief delay to ensure content is ready
+    setTimeout(() => {
+      window.print();
+    }, 100);
+  }
+
+  private preparePrintDocument() {
+    // Get the current document content
+    const editorElement = document.querySelector('.tiptap') as HTMLElement;
+    
+    if (!editorElement) {
+      console.warn('No editor content found for printing');
+      return;
+    }
+
+    // Create or update print styles
+    this.addPrintStyles();
+    
+    // Set document title for print header
+    const originalTitle = document.title;
+    document.title = this.documentName || 'Untitled Document';
+    
+    // Add print-specific classes to the editor
+    editorElement.classList.add('print-ready');
+    
+    // Restore original title after printing
+    window.addEventListener('afterprint', () => {
+      document.title = originalTitle;
+      editorElement.classList.remove('print-ready');
+    }, { once: true });
+  }
+
+  private addPrintStyles() {
+    // Check if print styles already exist
+    const existingStyles = document.getElementById('print-styles');
+    if (existingStyles) {
+      return;
+    }
+
+    // Create print-specific styles
+    const printStyles = document.createElement('style');
+    printStyles.id = 'print-styles';
+    printStyles.textContent = `
+      @media print {
+        /* Hide everything except the document content */
+        body * {
+          visibility: hidden;
+        }
+        
+        /* Show only the editor content and its children */
+        .tiptap, .tiptap * {
+          visibility: visible;
+        }
+        
+        /* Position the editor content for printing */
+        .tiptap {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 100% !important;
+          max-width: none !important;
+          margin: 0 !important;
+          padding: 20mm !important;
+          background: white !important;
+          box-shadow: none !important;
+          border: none !important;
+          font-size: 12pt !important;
+          line-height: 1.5 !important;
+          color: black !important;
+        }
+        
+        /* Ensure proper page breaks */
+        .tiptap h1, .tiptap h2, .tiptap h3 {
+          page-break-after: avoid;
+          page-break-inside: avoid;
+        }
+        
+        .tiptap p {
+          page-break-inside: avoid;
+          orphans: 3;
+          widows: 3;
+        }
+        
+        /* Table printing styles */
+        .tiptap table {
+          page-break-inside: avoid;
+          border-collapse: collapse;
+          width: 100%;
+        }
+        
+        .tiptap td, .tiptap th {
+          border: 1px solid #000;
+          padding: 8px;
+        }
+        
+        /* Image printing styles */
+        .tiptap img {
+          max-width: 100%;
+          height: auto;
+          page-break-inside: avoid;
+        }
+        
+        /* Hide collaboration cursors and other UI elements */
+        .collaboration-cursor__caret,
+        .collaboration-cursor__label {
+          display: none !important;
+        }
+        
+        /* Print header with document name */
+        @page {
+          margin: 20mm;
+          @top-center {
+            content: "${this.documentName || 'Untitled Document'}";
+            font-size: 10pt;
+            font-weight: bold;
+          }
+          @bottom-center {
+            content: "Page " counter(page) " of " counter(pages);
+            font-size: 9pt;
+          }
+        }
+        
+        /* Ensure proper font rendering */
+        .tiptap * {
+          -webkit-print-color-adjust: exact;
+          color-adjust: exact;
+        }
+        
+        /* Handle code blocks */
+        .tiptap pre {
+          background: #f5f5f5 !important;
+          border: 1px solid #ddd !important;
+          padding: 10px !important;
+          page-break-inside: avoid;
+          white-space: pre-wrap;
+          word-wrap: break-word;
+        }
+        
+        /* Handle lists */
+        .tiptap ul, .tiptap ol {
+          page-break-inside: avoid;
+        }
+        
+        .tiptap li {
+          page-break-inside: avoid;
+        }
+        
+        /* Handle blockquotes */
+        .tiptap blockquote {
+          border-left: 3px solid #ccc !important;
+          margin: 10px 0 !important;
+          padding-left: 15px !important;
+          page-break-inside: avoid;
+        }
+      }
+    `;
+    
+    document.head.appendChild(printStyles);
   }
 
   openRecentDocuments() {
