@@ -1,11 +1,11 @@
 <div class="flex flex-wrap gap-1 p-1">
-  <!-- New Document -->
+  <!-- New Document with Icon -->
   <div class="flex gap-1 border-r pr-2">
     <button
       class="p-2 rounded hover:bg-gray-100 hover:text-[#6200EE] transition-colors"
       (click)="onNewDocument()"
       title="New Document">
-      <i class="fas fa-file-plus"></i>
+      <img src="https://cdn4.iconfinder.com/data/icons/wirecons-free-vector-icons/32/add-512.png" alt="New Document" class="w-4 h-4">
     </button>
     <button
       class="p-2 rounded hover:bg-gray-100 hover:text-[#6200EE] transition-colors"
@@ -50,6 +50,18 @@
       (click)="onExportWord()"
       title="Export as Word">
       <i class="fas fa-file-word"></i>
+    </button>
+    <button
+      class="p-2 rounded hover:bg-gray-100 hover:text-[#6200EE] transition-colors"
+      (click)="onExportExcel()"
+      title="Export to Excel">
+      <img src="https://cdn3.iconfinder.com/data/icons/font-awesome-solid/512/file-excel-512.png" alt="Excel" class="w-4 h-4">
+    </button>
+    <button
+      class="p-2 rounded hover:bg-gray-100 hover:text-[#6200EE] transition-colors"
+      (click)="onExportPowerPoint()"
+      title="Export to PowerPoint">
+      <img src="https://cdn3.iconfinder.com/data/icons/font-awesome-solid/512/file-powerpoint-512.png" alt="PowerPoint" class="w-4 h-4">
     </button>
     <button
       class="p-2 rounded hover:bg-gray-100 hover:text-[#6200EE] transition-colors"

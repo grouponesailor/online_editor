@@ -55,7 +55,46 @@ export class FileService {
     }
   ];
 
-  constructor() {}
+  constructor() {
+    // Load saved documents from localStorage on service initialization
+    this.loadSavedDocumentsFromStorage();
+  }
+
+  private loadSavedDocumentsFromStorage() {
+    try {
+      const savedDocsKey = 'saved_documents_list';
+      const savedDocs = localStorage.getItem(savedDocsKey);
+      if (savedDocs) {
+        const parsedDocs = JSON.parse(savedDocs);
+        // Merge saved documents with mock documents, avoiding duplicates
+        parsedDocs.forEach((savedDoc: DocumentFile) => {
+          const existingIndex = this.mockDocuments.findIndex(doc => doc.id === savedDoc.id);
+          if (existingIndex > -1) {
+            // Update existing document
+            this.mockDocuments[existingIndex] = { ...this.mockDocuments[existingIndex], ...savedDoc };
+          } else {
+            // Add new document
+            this.mockDocuments.unshift(savedDoc);
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Failed to load saved documents from storage:', error);
+    }
+  }
+
+  private saveMockDocumentsToStorage() {
+    try {
+      const savedDocsKey = 'saved_documents_list';
+      // Only save user-created documents (not the initial mock ones)
+      const userDocs = this.mockDocuments.filter(doc => 
+        doc.id.startsWith('doc') && parseInt(doc.id.replace('doc', '')) > 1000000000000
+      );
+      localStorage.setItem(savedDocsKey, JSON.stringify(userDocs));
+    } catch (error) {
+      console.error('Failed to save documents to storage:', error);
+    }
+  }
 
   getDocuments(): Observable<DocumentFile[]> {
     return of(this.mockDocuments.filter(doc => doc.type === 'document')).pipe(delay(300));
@@ -90,6 +129,7 @@ export class FileService {
       collaborators: []
     };
     this.mockDocuments.unshift(newDoc);
+    this.saveMockDocumentsToStorage();
     return of(newDoc).pipe(delay(200));
   }
 
@@ -106,6 +146,7 @@ export class FileService {
         ...updates,
         lastModified: new Date()
       };
+      this.saveMockDocumentsToStorage();
       return of(this.mockDocuments[index]).pipe(delay(200));
     }
     return throwError('Document not found');
@@ -115,6 +156,7 @@ export class FileService {
     const index = this.mockDocuments.findIndex(doc => doc.id === id);
     if (index > -1) {
       this.mockDocuments.splice(index, 1);
+      this.saveMockDocumentsToStorage();
       return of(true).pipe(delay(300));
     }
     return throwError('Document not found');
@@ -132,6 +174,7 @@ export class FileService {
         collaborators: []
       };
       this.mockDocuments.unshift(duplicate);
+      this.saveMockDocumentsToStorage();
       return of(duplicate).pipe(delay(400));
     }
     return throwError('Document not found');
@@ -160,6 +203,7 @@ export class FileService {
       collaborators: []
     };
     this.mockDocuments.unshift(newDoc);
+    this.saveMockDocumentsToStorage();
     return of(newDoc).pipe(delay(2000)); // Simulate upload time
   }
 
@@ -170,6 +214,7 @@ export class FileService {
         document.collaborators.push(email);
         document.isShared = true;
       }
+      this.saveMockDocumentsToStorage();
       return of(true).pipe(delay(500));
     }
     return throwError('Document not found');
@@ -200,8 +245,8 @@ export class FileService {
     return of(history).pipe(delay(300));
   }
 
-  // Save document locally using localStorage
-  saveDocumentLocally(documentId: string): Observable<boolean> {
+  // Save document locally using localStorage and add/update in File Manager
+  saveDocumentLocally(documentId: string, documentName?: string): Observable<boolean> {
     try {
       // Get current document content (this would normally come from the editor)
       const documentContent = this.getCurrentDocumentContent(documentId);
@@ -218,11 +263,8 @@ export class FileService {
       const storageKey = `document_${documentId}_local`;
       localStorage.setItem(storageKey, JSON.stringify(saveData));
 
-      // Also update the document's last modified time
-      const docIndex = this.mockDocuments.findIndex(doc => doc.id === documentId);
-      if (docIndex > -1) {
-        this.mockDocuments[docIndex].lastModified = new Date();
-      }
+      // Add or update document in the File Manager list
+      this.addOrUpdateDocumentInList(documentId, documentName);
 
       // Save to recent saves list
       this.addToRecentSaves(documentId);
@@ -231,6 +273,60 @@ export class FileService {
     } catch (error) {
       console.error('Failed to save document locally:', error);
       return of(false).pipe(delay(100));
+    }
+  }
+
+  private addOrUpdateDocumentInList(documentId: string, documentName?: string) {
+    const existingIndex = this.mockDocuments.findIndex(doc => doc.id === documentId);
+    
+    if (existingIndex > -1) {
+      // Update existing document
+      this.mockDocuments[existingIndex].lastModified = new Date();
+      if (documentName && documentName.trim()) {
+        this.mockDocuments[existingIndex].name = documentName.trim();
+      }
+    } else {
+      // Create new document entry
+      const newDoc: DocumentFile = {
+        id: documentId,
+        name: documentName && documentName.trim() ? documentName.trim() : 'Untitled Document',
+        lastModified: new Date(),
+        size: this.estimateDocumentSize(documentId),
+        type: 'document',
+        isShared: false,
+        collaborators: []
+      };
+      this.mockDocuments.unshift(newDoc);
+    }
+    
+    // Save updated list to localStorage
+    this.saveMockDocumentsToStorage();
+  }
+
+  private estimateDocumentSize(documentId: string): number {
+    // Estimate document size based on content length
+    const content = this.getCurrentDocumentContent(documentId);
+    return content.length * 2; // Rough estimate: 2 bytes per character
+  }
+
+  // Method to update document name when it changes in the editor
+  updateDocumentName(documentId: string, newName: string): Observable<boolean> {
+    try {
+      const existingIndex = this.mockDocuments.findIndex(doc => doc.id === documentId);
+      
+      if (existingIndex > -1) {
+        this.mockDocuments[existingIndex].name = newName.trim() || 'Untitled Document';
+        this.mockDocuments[existingIndex].lastModified = new Date();
+        this.saveMockDocumentsToStorage();
+      } else {
+        // Create new document entry if it doesn't exist
+        this.addOrUpdateDocumentInList(documentId, newName);
+      }
+      
+      return of(true).pipe(delay(50));
+    } catch (error) {
+      console.error('Failed to update document name:', error);
+      return of(false).pipe(delay(50));
     }
   }
 

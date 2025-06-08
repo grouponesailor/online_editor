@@ -8,6 +8,10 @@ const routes: Routes = [
     loadChildren: () => import('./features/editor/editor.module').then(m => m.EditorModule)
   },
   { 
+    path: 'documents', 
+    loadChildren: () => import('./features/editor/editor.module').then(m => m.EditorModule)
+  },
+  { 
     path: 'file', 
     loadChildren: () => import('./features/file/file.module').then(m => m.FileModule)
   }

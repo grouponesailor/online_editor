@@ -13,6 +13,18 @@
     </button>
   </div>
 
+  <!-- File Tab -->
+  <div *ngIf="currentTab === 'file'">
+    <app-file-toolbar
+      [documentId]="documentId"
+      [documentName]="getCurrentDocumentName()"
+      (newDocument)="onNewDocument()"
+      (openDocument)="onOpenDocument()"
+      (saveDocument)="onSaveDocument()"
+      (exportDocument)="onExportPDF()">
+    </app-file-toolbar>
+  </div>
+
   <!-- Home Tab -->
   <div *ngIf="currentTab === 'home'" class="flex flex-wrap gap-1 p-1">
     <!-- Clipboard -->
