@@ -642,9 +642,13 @@ export class ToolbarComponent implements OnInit, OnDestroy, OnChanges, AfterView
   }
 
   insertTable(rows: number, cols: number) {
-    this.editor?.chain().focus()
-      .insertContent(`<table>${'<tr>' + '<td></td>'.repeat(cols) + '</tr>'.repeat(rows)}</table>`)
+    if (!this.editor) return;
+    
+    this.editor.chain()
+      .focus()
+      .insertTable({ rows, cols, withHeaderRow: true })
       .run();
+      
     this.showTableMenu = false;
   }
 

@@ -226,18 +226,18 @@
           <i class="fas fa-table"></i>
           <i class="fas fa-chevron-down ml-1"></i>
         </button>
-        <div *ngIf="showTableMenu" class="absolute top-full left-0 mt-1 bg-white shadow-lg rounded p-2 z-50">
-          <div class="grid grid-cols-8 gap-1">
+        <div *ngIf="showTableMenu" class="absolute top-full left-0 mt-1 z-50 table-grid-preview">
+          <div class="grid">
             <button
               *ngFor="let cell of tableGrid"
-              class="w-6 h-6 border hover:bg-blue-100 hover:border-[#6200EE] transition-colors"
-              [class.bg-blue-200]="cell.selected"
+              class="cell"
+              [class.selected]="cell.selected"
               (mouseover)="updateTableSelection(cell.row, cell.col)"
               (click)="insertTable(cell.row, cell.col)">
             </button>
           </div>
-          <div class="text-center mt-2 text-sm text-gray-600">
-            {{ tableSelection.row }}x{{ tableSelection.col }}
+          <div class="dimensions">
+            {{ tableSelection.row }} × {{ tableSelection.col }} Table
           </div>
         </div>
       </div>
