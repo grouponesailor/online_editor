@@ -60,8 +60,8 @@ export class ToolbarComponent implements OnChanges {
   selectedImage: any = null;
 
   // Current selections
-  currentFontFamily = 'Arial';
-  currentFontSize = '11';
+  currentFontFamily = 'Arial, sans-serif';
+  currentFontSize = '12';
   currentTextColor = '#000000';
   currentHighlightColor = '#FFEB3B';
   tableSelection = { row: 0, col: 0 };
@@ -70,26 +70,33 @@ export class ToolbarComponent implements OnChanges {
 
   // Options
   fontFamilies: FontFamily[] = [
-    { label: 'Arial', value: 'Arial' },
-    { label: 'Times New Roman', value: 'Times New Roman' },
-    { label: 'Courier New', value: 'Courier New' },
-    { label: 'Georgia', value: 'Georgia' },
-    { label: 'Verdana', value: 'Verdana' }
+    { label: 'Arial', value: 'Arial, sans-serif' },
+    { label: 'Times New Roman', value: 'Times New Roman, serif' },
+    { label: 'Courier New', value: 'Courier New, monospace' },
+    { label: 'Georgia', value: 'Georgia, serif' },
+    { label: 'Verdana', value: 'Verdana, sans-serif' },
+    { label: 'Helvetica', value: 'Helvetica, sans-serif' },
+    { label: 'Calibri', value: 'Calibri, sans-serif' },
+    { label: 'Trebuchet MS', value: 'Trebuchet MS, sans-serif' },
+    { label: 'Comic Sans MS', value: 'Comic Sans MS, cursive' }
   ];
 
   fontSizes: FontSize[] = [
-    { label: '8', value: '8' },
-    { label: '9', value: '9' },
-    { label: '10', value: '10' },
-    { label: '11', value: '11' },
-    { label: '12', value: '12' },
-    { label: '14', value: '14' },
-    { label: '16', value: '16' },
-    { label: '18', value: '18' },
-    { label: '24', value: '24' },
-    { label: '30', value: '30' },
-    { label: '36', value: '36' },
-    { label: '48', value: '48' }
+    { label: '8pt', value: '8' },
+    { label: '9pt', value: '9' },
+    { label: '10pt', value: '10' },
+    { label: '11pt', value: '11' },
+    { label: '12pt', value: '12' },
+    { label: '14pt', value: '14' },
+    { label: '16pt', value: '16' },
+    { label: '18pt', value: '18' },
+    { label: '20pt', value: '20' },
+    { label: '24pt', value: '24' },
+    { label: '28pt', value: '28' },
+    { label: '32pt', value: '32' },
+    { label: '36pt', value: '36' },
+    { label: '48pt', value: '48' },
+    { label: '72pt', value: '72' }
   ];
 
   tabs: ToolbarTab[] = [
@@ -222,20 +229,72 @@ export class ToolbarComponent implements OnChanges {
   }
 
   setupEditorListeners() {
-    // Add editor event listeners here
+    if (!this.editor) return;
+
+    // Listen for selection updates to reflect current formatting
+    this.editor.on('selectionUpdate', () => {
+      this.updateCurrentFormatting();
+    });
+
+    this.editor.on('transaction', () => {
+      this.updateCurrentFormatting();
+    });
+  }
+
+  private updateCurrentFormatting() {
+    if (!this.editor) return;
+
+    const { state } = this.editor;
+    const { from, to } = state.selection;
+
+    // Update current font family
+    const fontFamilyMark = this.editor.getAttributes('textStyle');
+    if (fontFamilyMark['fontFamily']) {
+      this.currentFontFamily = fontFamilyMark['fontFamily'];
+    }
+
+    // Update current font size
+    const fontSizeMark = this.editor.getAttributes('fontSize');
+    if (fontSizeMark['size']) {
+      // Remove 'px' unit if present to match our dropdown values
+      this.currentFontSize = fontSizeMark['size'].replace('px', '');
+    }
+
+    // Update text color
+    const colorMark = this.editor.getAttributes('textStyle');
+    if (colorMark['color']) {
+      this.currentTextColor = colorMark['color'];
+    }
   }
 
   // Font handling
   setFontFamily(event: any) {
     const font = event.target.value;
     this.currentFontFamily = font;
-    this.editor?.chain().focus().updateAttributes('textStyle', { fontFamily: font }).run();
+    
+    if (!this.editor) return;
+    
+    // Use the proper command for setting font family
+    this.editor.chain()
+      .focus()
+      .setMark('textStyle', { fontFamily: font })
+      .run();
   }
 
   setFontSize(event: any) {
     const size = event.target.value;
     this.currentFontSize = size;
-    this.editor?.chain().focus().setMark('fontSize', { size: size }).run();
+    
+    if (!this.editor) return;
+    
+    // Ensure the font size includes proper units (px)
+    const sizeWithUnit = size.includes('px') ? size : `${size}px`;
+    
+    // Use the proper command for setting font size
+    this.editor.chain()
+      .focus()
+      .setMark('fontSize', { size: sizeWithUnit })
+      .run();
   }
 
   // Share functionality
