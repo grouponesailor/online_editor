@@ -112,6 +112,52 @@
       </button>
     </div>
 
+    <!-- Lists -->
+    <div class="flex gap-1 border-r pr-2">
+      <div class="relative">
+        <button
+          class="p-2 rounded hover:bg-gray-100 flex items-center"
+          (click)="showListMenu = !showListMenu"
+          title="List Options">
+          <i class="fas fa-list"></i>
+          <i class="fas fa-chevron-down ml-1 text-xs"></i>
+        </button>
+        <div *ngIf="showListMenu" class="absolute top-full left-0 mt-1 bg-white shadow-lg rounded py-1 z-50 w-64">
+          <button
+            *ngFor="let listItem of listItems"
+            class="block w-full px-4 py-2 text-left hover:bg-gray-100 text-sm flex items-center gap-3"
+            [class.bg-blue-50]="editor?.isActive(listItem.value.includes('bullet') ? 'bulletList' : listItem.value.includes('ordered') ? 'orderedList' : 'taskList')"
+            (click)="listItem.command(editor); showListMenu = false">
+            <i [class]="listItem.icon" class="text-gray-600 w-4"></i>
+            <span>{{ listItem.label }}</span>
+          </button>
+        </div>
+      </div>
+      
+      <!-- Quick list buttons -->
+      <button
+        class="p-2 rounded hover:bg-gray-100"
+        [class.bg-gray-200]="editor?.isActive('bulletList')"
+        (click)="toggleBulletList()"
+        title="Bullet List">
+        <i class="fas fa-list-ul"></i>
+      </button>
+      <button
+        class="p-2 rounded hover:bg-gray-100"
+        [class.bg-gray-200]="editor?.isActive('orderedList')"
+        (click)="toggleOrderedList()"
+        title="Numbered List">
+        <i class="fas fa-list-ol"></i>
+      </button>
+      <button
+        class="p-2 rounded hover:bg-gray-100"
+        [class.bg-gray-200]="editor?.isActive('taskList')"
+        (click)="toggleTaskList()"
+        title="Task List">
+        <i class="fas fa-tasks"></i>
+      </button>
+    </div>
+
     <!-- Alignment -->
     <div class="flex gap-1 border-r pr-2">
       <button

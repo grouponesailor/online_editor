@@ -553,6 +553,18 @@ export class EditorComponent implements OnInit, OnDestroy, AfterViewInit {
               return false; // Let TipTap handle table navigation
             }
             
+            // Check if we're in a list (bullet, ordered, or task list)
+            if (this.editor?.isActive('bulletList') || this.editor?.isActive('orderedList') || this.editor?.isActive('taskList')) {
+              if (event.shiftKey) {
+                // Shift+Tab: Lift (outdent) list item
+                this.editor.chain().focus().liftListItem('listItem').run();
+              } else {
+                // Tab: Sink (indent) list item to create nested list
+                this.editor.chain().focus().sinkListItem('listItem').run();
+              }
+              return true; // Prevent default tab behavior
+            }
+            
             // Otherwise insert spaces for indentation
             this.editor?.chain()
               .insertContent('    ') // 4 spaces for indentation

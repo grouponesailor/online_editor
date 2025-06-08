@@ -57,6 +57,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, OnChanges {
   showImageMenu = false;
   showImageEditDialog = false;
   showHeadingMenu = false;
+  showListMenu = false;
   formatPainterActive = false;
   selectedImage: any = null;
 
@@ -171,6 +172,87 @@ export class ToolbarComponent implements OnInit, OnDestroy, OnChanges {
       value: 'h6',
       shortcut: 'Ctrl+Alt+6',
       command: (editor: Editor | null) => editor?.chain().focus().toggleHeading({ level: 6 }).run()
+    }
+  ];
+
+  listItems = [
+    {
+      label: 'Bullet List (Disc)',
+      value: 'bullet-disc',
+      icon: 'fas fa-list-ul',
+      command: (editor: Editor | null) => {
+        editor?.chain().focus().toggleBulletList().run();
+        this.setListStyle('disc');
+      }
+    },
+    {
+      label: 'Bullet List (Circle)',
+      value: 'bullet-circle',
+      icon: 'far fa-circle',
+      command: (editor: Editor | null) => {
+        editor?.chain().focus().toggleBulletList().run();
+        this.setListStyle('circle');
+      }
+    },
+    {
+      label: 'Bullet List (Square)',
+      value: 'bullet-square',
+      icon: 'fas fa-square',
+      command: (editor: Editor | null) => {
+        editor?.chain().focus().toggleBulletList().run();
+        this.setListStyle('square');
+      }
+    },
+    {
+      label: 'Numbered List (1, 2, 3)',
+      value: 'ordered-decimal',
+      icon: 'fas fa-list-ol',
+      command: (editor: Editor | null) => {
+        editor?.chain().focus().toggleOrderedList().run();
+        this.setListStyle('decimal');
+      }
+    },
+    {
+      label: 'Numbered List (a, b, c)',
+      value: 'ordered-alpha',
+      icon: 'fas fa-sort-alpha-down',
+      command: (editor: Editor | null) => {
+        editor?.chain().focus().toggleOrderedList().run();
+        this.setListStyle('lower-alpha');
+      }
+    },
+    {
+      label: 'Numbered List (A, B, C)',
+      value: 'ordered-alpha-upper',
+      icon: 'fas fa-sort-alpha-up',
+      command: (editor: Editor | null) => {
+        editor?.chain().focus().toggleOrderedList().run();
+        this.setListStyle('upper-alpha');
+      }
+    },
+    {
+      label: 'Numbered List (i, ii, iii)',
+      value: 'ordered-roman',
+      icon: 'fas fa-list-ol',
+      command: (editor: Editor | null) => {
+        editor?.chain().focus().toggleOrderedList().run();
+        this.setListStyle('lower-roman');
+      }
+    },
+    {
+      label: 'Numbered List (I, II, III)',
+      value: 'ordered-roman-upper',
+      icon: 'fas fa-list-ol',
+      command: (editor: Editor | null) => {
+        editor?.chain().focus().toggleOrderedList().run();
+        this.setListStyle('upper-roman');
+      }
+    },
+    {
+      label: 'Task List',
+      value: 'task',
+      icon: 'fas fa-tasks',
+      command: (editor: Editor | null) => editor?.chain().focus().toggleTaskList().run()
     }
   ];
 
@@ -601,5 +683,43 @@ export class ToolbarComponent implements OnInit, OnDestroy, OnChanges {
   getCurrentHeadingLabel(): string {
     const headingItem = this.headingItems.find(item => item.value === this.currentHeading);
     return headingItem ? headingItem.label : 'Paragraph';
+  }
+
+  setListStyle(style: string) {
+    if (!this.editor) return;
+
+    setTimeout(() => {
+      const editorElement = this.editor?.view.dom as HTMLElement;
+      if (editorElement) {
+        // Find the currently selected list
+        const listElements = editorElement.querySelectorAll('ul, ol');
+        listElements.forEach(list => {
+          if (list.tagName.toLowerCase() === 'ul') {
+            (list as HTMLElement).style.listStyleType = style;
+          } else if (list.tagName.toLowerCase() === 'ol') {
+            (list as HTMLElement).style.listStyleType = style;
+          }
+        });
+      }
+    }, 100);
+  }
+
+  // List action methods to avoid TypeScript errors
+  toggleBulletList() {
+    if (this.editor) {
+      this.editor.chain().focus().toggleBulletList().run();
+    }
+  }
+
+  toggleOrderedList() {
+    if (this.editor) {
+      this.editor.chain().focus().toggleOrderedList().run();
+    }
+  }
+
+  toggleTaskList() {
+    if (this.editor) {
+      this.editor.chain().focus().toggleTaskList().run();
+    }
   }
 }
