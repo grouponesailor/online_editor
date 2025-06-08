@@ -7,6 +7,9 @@ import { ShareDialogComponent } from './components/share-dialog/share-dialog.com
 import { ImageEditDialogComponent } from './components/image-edit-dialog/image-edit-dialog.component';
 import { CommentsSidebarComponent } from './components/comments-sidebar/comments-sidebar.component';
 
+// Import File Module components
+import { FileModule } from '../features/file/file.module';
+
 @NgModule({
   declarations: [
     ToolbarComponent,
@@ -16,7 +19,8 @@ import { CommentsSidebarComponent } from './components/comments-sidebar/comments
   ],
   imports: [
     CommonModule,
-    FormsModule
+    FormsModule,
+    FileModule
   ],
   exports: [
     CommonModule,
@@ -27,4 +31,4 @@ import { CommentsSidebarComponent } from './components/comments-sidebar/comments
     CommentsSidebarComponent
   ]
 })
-export class SharedModule { } 
+export class SharedModule { }

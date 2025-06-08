@@ -1,0 +1,52 @@
+:host {
+  display: block;
+}
+
+.toolbar-section {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding-right: 8px;
+  border-right: 1px solid #e5e7eb;
+}
+
+.toolbar-section:last-child {
+  border-right: none;
+  padding-right: 0;
+}
+
+.toolbar-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #6b7280;
+}
+
+.toolbar-button:hover {
+  background-color: #f3f4f6;
+  color: #6200EE;
+}
+
+.toolbar-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.toolbar-button.active {
+  background-color: #e5e7eb;
+  color: #374151;
+}
+
+.toolbar-separator {
+  width: 1px;
+  height: 24px;
+  background-color: #e5e7eb;
+  margin: 0 8px;
+}

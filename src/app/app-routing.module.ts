@@ -6,6 +6,10 @@ const routes: Routes = [
   { 
     path: 'editor', 
     loadChildren: () => import('./features/editor/editor.module').then(m => m.EditorModule)
+  },
+  { 
+    path: 'file', 
+    loadChildren: () => import('./features/file/file.module').then(m => m.FileModule)
   }
 ];
 
@@ -13,4 +17,4 @@ const routes: Routes = [
   imports: [RouterModule.forRoot(routes)],
   exports: [RouterModule]
 })
-export class AppRoutingModule { } 
+export class AppRoutingModule { }

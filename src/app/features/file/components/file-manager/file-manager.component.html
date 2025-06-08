@@ -1,0 +1,236 @@
+<div class="min-h-screen bg-gray-50">
+  <!-- Header -->
+  <div class="bg-white border-b px-6 py-4">
+    <div class="flex items-center justify-between">
+      <h1 class="text-2xl font-semibold text-gray-900">File Manager</h1>
+      <button
+        (click)="createNewDocument()"
+        class="bg-[#6200EE] text-white px-4 py-2 rounded-md hover:bg-[#5000CC] transition-colors">
+        <i class="fas fa-plus mr-2"></i>
+        New Document
+      </button>
+    </div>
+  </div>
+
+  <!-- Search and Controls -->
+  <div class="bg-white border-b px-6 py-4">
+    <div class="flex items-center justify-between gap-4">
+      <!-- Search -->
+      <div class="flex-1 max-w-md">
+        <div class="relative">
+          <input
+            type="text"
+            [(ngModel)]="searchQuery"
+            (input)="onSearch()"
+            placeholder="Search documents..."
+            class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#6200EE] focus:border-transparent">
+          <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+        </div>
+      </div>
+
+      <!-- View Controls -->
+      <div class="flex items-center gap-4">
+        <!-- Sort -->
+        <select
+          [(ngModel)]="sortBy"
+          (ngModelChange)="sortDocuments()"
+          class="border border-gray-300 rounded-md px-3 py-2 focus:border-[#6200EE] focus:ring-[#6200EE]">
+          <option value="date">Sort by Date</option>
+          <option value="name">Sort by Name</option>
+          <option value="size">Sort by Size</option>
+        </select>
+
+        <!-- View Toggle -->
+        <div class="flex border border-gray-300 rounded-md">
+          <button
+            (click)="selectedView = 'grid'"
+            [class.bg-[#6200EE]]="selectedView === 'grid'"
+            [class.text-white]="selectedView === 'grid'"
+            class="px-3 py-2 hover:bg-gray-100 transition-colors">
+            <i class="fas fa-th"></i>
+          </button>
+          <button
+            (click)="selectedView = 'list'"
+            [class.bg-[#6200EE]]="selectedView === 'list'"
+            [class.text-white]="selectedView === 'list'"
+            class="px-3 py-2 hover:bg-gray-100 transition-colors border-l">
+            <i class="fas fa-list"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="p-6">
+    <!-- Recent Documents -->
+    <div *ngIf="recentDocuments.length > 0" class="mb-8">
+      <h2 class="text-lg font-semibold text-gray-900 mb-4">Recent Documents</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+        <div
+          *ngFor="let doc of recentDocuments"
+          class="bg-white rounded-lg border hover:shadow-md transition-shadow cursor-pointer"
+          (click)="openDocument(doc)">
+          <div class="p-4">
+            <div class="flex items-center justify-between mb-2">
+              <i class="fas fa-file-alt text-2xl text-[#6200EE]"></i>
+              <span *ngIf="doc.isShared" class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
+                Shared
+              </span>
+            </div>
+            <h3 class="font-medium text-gray-900 truncate">{{ doc.name }}</h3>
+            <p class="text-sm text-gray-500">{{ doc.lastModified | date:'short' }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Templates -->
+    <div *ngIf="templates.length > 0" class="mb-8">
+      <h2 class="text-lg font-semibold text-gray-900 mb-4">Templates</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div
+          *ngFor="let template of templates"
+          class="bg-white rounded-lg border hover:shadow-md transition-shadow cursor-pointer"
+          (click)="openDocument(template)">
+          <div class="p-4">
+            <div class="flex items-center justify-between mb-2">
+              <i class="fas fa-file-contract text-2xl text-blue-500"></i>
+              <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                Template
+              </span>
+            </div>
+            <h3 class="font-medium text-gray-900 truncate">{{ template.name }}</h3>
+            <p class="text-sm text-gray-500">{{ template.lastModified | date:'short' }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- All Documents -->
+    <div>
+      <h2 class="text-lg font-semibold text-gray-900 mb-4">All Documents</h2>
+      
+      <!-- Grid View -->
+      <div *ngIf="selectedView === 'grid'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div
+          *ngFor="let doc of getFilteredDocuments()"
+          class="bg-white rounded-lg border hover:shadow-md transition-shadow group">
+          <div class="p-4">
+            <div class="flex items-center justify-between mb-2">
+              <i class="fas fa-file-alt text-2xl text-[#6200EE]"></i>
+              <div class="opacity-0 group-hover:opacity-100 transition-opacity">
+                <div class="relative">
+                  <button class="text-gray-500 hover:text-gray-700 p-1">
+                    <i class="fas fa-ellipsis-v"></i>
+                  </button>
+                  <!-- Dropdown menu would go here -->
+                </div>
+              </div>
+            </div>
+            <h3 class="font-medium text-gray-900 truncate mb-1">{{ doc.name }}</h3>
+            <p class="text-sm text-gray-500 mb-2">{{ doc.lastModified | date:'short' }}</p>
+            <div class="flex items-center justify-between text-xs text-gray-400">
+              <span>{{ formatFileSize(doc.size) }}</span>
+              <span *ngIf="doc.isShared" class="bg-green-100 text-green-800 px-2 py-1 rounded">
+                Shared
+              </span>
+            </div>
+          </div>
+          <div class="border-t p-3 bg-gray-50">
+            <div class="flex gap-2">
+              <button
+                (click)="openDocument(doc)"
+                class="flex-1 text-xs bg-[#6200EE] text-white px-3 py-1 rounded hover:bg-[#5000CC] transition-colors">
+                Open
+              </button>
+              <button
+                (click)="shareDocument(doc)"
+                class="text-xs border border-gray-300 px-3 py-1 rounded hover:bg-gray-100 transition-colors">
+                Share
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- List View -->
+      <div *ngIf="selectedView === 'list'" class="bg-white rounded-lg border">
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead class="bg-gray-50 border-b">
+              <tr>
+                <th class="text-left py-3 px-4 font-medium text-gray-900">Name</th>
+                <th class="text-left py-3 px-4 font-medium text-gray-900">Modified</th>
+                <th class="text-left py-3 px-4 font-medium text-gray-900">Size</th>
+                <th class="text-left py-3 px-4 font-medium text-gray-900">Shared</th>
+                <th class="text-left py-3 px-4 font-medium text-gray-900">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                *ngFor="let doc of getFilteredDocuments()"
+                class="border-b hover:bg-gray-50 transition-colors">
+                <td class="py-3 px-4">
+                  <div class="flex items-center gap-3">
+                    <i class="fas fa-file-alt text-[#6200EE]"></i>
+                    <span class="font-medium text-gray-900">{{ doc.name }}</span>
+                  </div>
+                </td>
+                <td class="py-3 px-4 text-gray-600">{{ doc.lastModified | date:'short' }}</td>
+                <td class="py-3 px-4 text-gray-600">{{ formatFileSize(doc.size) }}</td>
+                <td class="py-3 px-4">
+                  <span *ngIf="doc.isShared" class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">
+                    Yes
+                  </span>
+                  <span *ngIf="!doc.isShared" class="text-gray-400 text-xs">No</span>
+                </td>
+                <td class="py-3 px-4">
+                  <div class="flex gap-2">
+                    <button
+                      (click)="openDocument(doc)"
+                      class="text-[#6200EE] hover:text-[#5000CC] transition-colors"
+                      title="Open">
+                      <i class="fas fa-external-link-alt"></i>
+                    </button>
+                    <button
+                      (click)="shareDocument(doc)"
+                      class="text-gray-500 hover:text-gray-700 transition-colors"
+                      title="Share">
+                      <i class="fas fa-share-alt"></i>
+                    </button>
+                    <button
+                      (click)="duplicateDocument(doc)"
+                      class="text-gray-500 hover:text-gray-700 transition-colors"
+                      title="Duplicate">
+                      <i class="fas fa-copy"></i>
+                    </button>
+                    <button
+                      (click)="deleteDocument(doc)"
+                      class="text-red-500 hover:text-red-700 transition-colors"
+                      title="Delete">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="getFilteredDocuments().length === 0" class="text-center py-12">
+        <i class="fas fa-file-alt text-4xl text-gray-300 mb-4"></i>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">No documents found</h3>
+        <p class="text-gray-500 mb-4">Get started by creating your first document.</p>
+        <button
+          (click)="createNewDocument()"
+          class="bg-[#6200EE] text-white px-4 py-2 rounded-md hover:bg-[#5000CC] transition-colors">
+          <i class="fas fa-plus mr-2"></i>
+          Create Document
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

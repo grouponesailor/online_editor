@@ -1,0 +1,81 @@
+<div class="flex flex-wrap gap-1 p-1">
+  <!-- New Document -->
+  <div class="flex gap-1 border-r pr-2">
+    <button
+      class="p-2 rounded hover:bg-gray-100 hover:text-[#6200EE] transition-colors"
+      (click)="onNewDocument()"
+      title="New Document">
+      <i class="fas fa-file-plus"></i>
+    </button>
+    <button
+      class="p-2 rounded hover:bg-gray-100 hover:text-[#6200EE] transition-colors"
+      (click)="onOpenDocument()"
+      title="Open Document">
+      <i class="fas fa-folder-open"></i>
+    </button>
+    <button
+      class="p-2 rounded hover:bg-gray-100 hover:text-[#6200EE] transition-colors"
+      (click)="uploadFile()"
+      title="Upload File">
+      <i class="fas fa-upload"></i>
+    </button>
+  </div>
+
+  <!-- Save -->
+  <div class="flex gap-1 border-r pr-2">
+    <button
+      class="p-2 rounded hover:bg-gray-100 hover:text-[#6200EE] transition-colors"
+      (click)="saveDocumentLocally()"
+      title="Save (Ctrl+S)">
+      <i class="fas fa-save"></i>
+    </button>
+    <button
+      class="p-2 rounded hover:bg-gray-100 hover:text-[#6200EE] transition-colors"
+      title="Auto Save"
+      [class.text-green-600]="true">
+      <i class="fas fa-check-circle"></i>
+    </button>
+  </div>
+
+  <!-- Export -->
+  <div class="flex gap-1 border-r pr-2">
+    <button
+      class="p-2 rounded hover:bg-gray-100 hover:text-[#6200EE] transition-colors"
+      (click)="onExportPDF()"
+      title="Export as PDF">
+      <i class="fas fa-file-pdf"></i>
+    </button>
+    <button
+      class="p-2 rounded hover:bg-gray-100 hover:text-[#6200EE] transition-colors"
+      (click)="onExportWord()"
+      title="Export as Word">
+      <i class="fas fa-file-word"></i>
+    </button>
+    <button
+      class="p-2 rounded hover:bg-gray-100 hover:text-[#6200EE] transition-colors"
+      (click)="onPrint()"
+      title="Print">
+      <i class="fas fa-print"></i>
+    </button>
+  </div>
+
+  <!-- Recent -->
+  <div class="flex gap-1 pr-2">
+    <button
+      class="p-2 rounded hover:bg-gray-100 hover:text-[#6200EE] transition-colors"
+      (click)="openRecentDocuments()"
+      title="Recent Documents">
+      <i class="fas fa-history"></i>
+    </button>
+    <button
+      class="p-2 rounded hover:bg-gray-100 hover:text-[#6200EE] transition-colors"
+      title="File Manager">
+      <i class="fas fa-folder"></i>
+    </button>
+  </div>
+
+  <!-- Save Status Indicator -->
+  <div class="flex items-center text-xs text-gray-500 ml-2">
+    <span>Press Ctrl+S to save locally</span>
+  </div>
+</div>
