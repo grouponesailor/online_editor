@@ -32,7 +32,15 @@ export class ShareService {
   private loadOfflineData() {
     try {
       const data = localStorage.getItem(this.offlineStorageKey);
-      return data ? JSON.parse(data) : {
+      if (data) {
+        const parsed = JSON.parse(data);
+        return {
+          settings: new Map(Object.entries(parsed.settings || {})),
+          users: new Map(Object.entries(parsed.users || {})),
+          documents: new Map(Object.entries(parsed.documents || {}))
+        };
+      }
+      return {
         settings: new Map(),
         users: new Map(),
         documents: new Map()
@@ -378,4 +386,4 @@ export class ShareService {
     
     return of(qrCodeSvg);
   }
-} 
+}
