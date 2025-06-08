@@ -8,9 +8,69 @@
       [class.border-b-2]="currentTab === tab.id"
       [class.border-blue-600]="currentTab === tab.id"
       (click)="currentTab = tab.id">
-      <i [class]="tab.icon"></i>
+      <i *ngIf="tab.icon" [class]="tab.icon"></i>
+      <img *ngIf="tab.iconUrl" [src]="tab.iconUrl" alt="" class="w-4 h-4">
       {{ tab.label }}
     </button>
+  </div>
+
+  <!-- File Tab -->
+  <div *ngIf="currentTab === 'file'" class="flex flex-wrap gap-1 p-1">
+    <!-- New Document -->
+    <div class="flex gap-1 border-r pr-2">
+      <button
+        class="p-2 rounded hover:bg-gray-100"
+        title="New Document">
+        <i class="fas fa-file-plus"></i>
+      </button>
+      <button
+        class="p-2 rounded hover:bg-gray-100"
+        title="Open Document">
+        <i class="fas fa-folder-open"></i>
+      </button>
+    </div>
+
+    <!-- Save -->
+    <div class="flex gap-1 border-r pr-2">
+      <button
+        class="p-2 rounded hover:bg-gray-100"
+        title="Save">
+        <i class="fas fa-save"></i>
+      </button>
+      <button
+        class="p-2 rounded hover:bg-gray-100"
+        title="Save As">
+        <i class="fas fa-save"></i>
+      </button>
+    </div>
+
+    <!-- Export -->
+    <div class="flex gap-1 border-r pr-2">
+      <button
+        class="p-2 rounded hover:bg-gray-100"
+        title="Export as PDF">
+        <i class="fas fa-file-pdf"></i>
+      </button>
+      <button
+        class="p-2 rounded hover:bg-gray-100"
+        title="Export as Word">
+        <i class="fas fa-file-word"></i>
+      </button>
+      <button
+        class="p-2 rounded hover:bg-gray-100"
+        title="Print">
+        <i class="fas fa-print"></i>
+      </button>
+    </div>
+
+    <!-- Recent -->
+    <div class="flex gap-1 pr-2">
+      <button
+        class="p-2 rounded hover:bg-gray-100"
+        title="Recent Documents">
+        <i class="fas fa-history"></i>
+      </button>
+    </div>
   </div>
 
   <!-- Home Tab -->
@@ -312,4 +372,4 @@
   [selectedImage]="selectedImage"
   (save)="updateImage($event)"
   (cancel)="showImageEditDialog = false">
-</app-image-edit-dialog> 
+</app-image-edit-dialog>

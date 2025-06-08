@@ -27,7 +27,8 @@ interface ImageEdit {
 interface ToolbarTab {
   id: string;
   label: string;
-  icon: string;
+  icon?: string;
+  iconUrl?: string;
 }
 
 interface ShapeDefinition {
@@ -92,6 +93,7 @@ export class ToolbarComponent implements OnChanges {
   ];
 
   tabs: ToolbarTab[] = [
+    { id: 'file', label: 'File', iconUrl: 'https://cdn3.iconfinder.com/data/icons/feather-5/24/file-text-64.png' },
     { id: 'home', label: 'Home', icon: 'fas fa-home' },
     { id: 'insert', label: 'Insert', icon: 'fas fa-plus' },
     { id: 'shapes', label: 'Shapes', icon: 'fas fa-shapes' },
