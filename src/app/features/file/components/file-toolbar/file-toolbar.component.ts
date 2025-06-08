@@ -174,7 +174,7 @@ export class FileToolbarComponent {
       await writable.write(blob);
       await writable.close();
     } catch (error) {
-      if (error.name !== 'AbortError') {
+      if (error instanceof Error && error.name !== 'AbortError') {
         throw error;
       }
       // User cancelled the save dialog
@@ -289,10 +289,10 @@ export class FileToolbarComponent {
 
   private escapeXml(text: string): string {
     return text
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
+      .replace(/&/g, '&')
+      .replace(/</g, '<')
+      .replace(/>/g, '>')
+      .replace(/"/g, '"')
       .replace(/'/g, '&apos;');
   }
 
