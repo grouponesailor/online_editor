@@ -28,6 +28,7 @@ import Underline from '@tiptap/extension-underline';
 import { Shape } from '../../../../extensions/shape';
 import { NetworkConfigService } from '../../../../core/services/network-config.service';
 import { ShareService } from '../../../../core/services/share.service';
+import { FileService } from '../../../file/services/file.service';
 import { Subject, takeUntil, debounceTime } from 'rxjs';
 
 declare module '@tiptap/core' {
@@ -148,11 +149,13 @@ export class EditorComponent implements OnInit, OnDestroy, AfterViewInit {
   private lowlight = createLowlight(common);
   private userColor: string;
   private saveDebouncer = new Subject<void>();
+  private nameChangeDebouncer = new Subject<string>();
 
   constructor(
     private route: ActivatedRoute,
     private networkConfigService: NetworkConfigService,
-    private shareService: ShareService
+    private shareService: ShareService,
+    private fileService: FileService
   ) {
     // Initialize Yjs document
     this.ydoc = new Y.Doc();
@@ -174,6 +177,14 @@ export class EditorComponent implements OnInit, OnDestroy, AfterViewInit {
       if (this.networkStatus === 'offline') {
         this.saveOffline();
       }
+    });
+
+    // Setup document name change debouncer
+    this.nameChangeDebouncer.pipe(
+      debounceTime(1000),
+      takeUntil(this.destroy$)
+    ).subscribe((newName: string) => {
+      this.updateDocumentNameInFileManager(newName);
     });
   }
 
@@ -242,6 +253,9 @@ export class EditorComponent implements OnInit, OnDestroy, AfterViewInit {
     if (this.documentName.trim()) {
       localStorage.setItem(`doc-name-${this.documentId}`, this.documentName);
       
+      // Trigger debounced update to File Manager
+      this.nameChangeDebouncer.next(this.documentName);
+      
       if (this.networkStatus === 'on-premise' || this.networkStatus === 'online') {
         const url = `/api/documents/${this.documentId}`;
         fetch(url, {
@@ -251,6 +265,20 @@ export class EditorComponent implements OnInit, OnDestroy, AfterViewInit {
         }).catch(console.error);
       }
     }
+  }
+
+  private updateDocumentNameInFileManager(newName: string) {
+    // Update the document name in the File Manager list
+    this.fileService.updateDocumentName(this.documentId, newName).subscribe(
+      (success: boolean) => {
+        if (success) {
+          console.log('Document name updated in File Manager');
+        }
+      },
+      (error: any) => {
+        console.error('Failed to update document name in File Manager:', error);
+      }
+    );
   }
 
   onDocumentNameChange(newName: string) {
@@ -599,11 +627,11 @@ export class EditorComponent implements OnInit, OnDestroy, AfterViewInit {
       this.hasOfflineChanges = false;
       this.lastSaved = new Date();
       
-      // Also save through share service for synchronization
-      this.shareService.saveDocumentOffline(this.documentId, content)
+      // Save through file service and add to File Manager list
+      this.fileService.saveDocumentLocally(this.documentId, this.documentName)
         .subscribe((success: boolean) => {
           if (success) {
-            console.log('Document saved offline successfully');
+            console.log('Document saved offline and added to File Manager');
           }
         });
     } catch (error) {

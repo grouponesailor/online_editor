@@ -297,6 +297,13 @@ export class ToolbarComponent implements OnChanges {
       .run();
   }
 
+  // Get current document name from the editor component
+  getCurrentDocumentName(): string {
+    // Try to get document name from localStorage
+    const savedName = localStorage.getItem(`doc-name-${this.documentId}`);
+    return savedName || 'Untitled Document';
+  }
+
   // File operations
   onNewDocument() {
     if (confirm('Create a new document? Any unsaved changes will be lost.')) {

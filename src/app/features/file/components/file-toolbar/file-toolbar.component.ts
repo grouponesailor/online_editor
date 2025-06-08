@@ -8,6 +8,7 @@ import { FileService } from '../../services/file.service';
 })
 export class FileToolbarComponent {
   @Input() documentId: string = '';
+  @Input() documentName: string = 'Untitled Document';
   @Output() newDocument = new EventEmitter<void>();
   @Output() openDocument = new EventEmitter<void>();
   @Output() saveDocument = new EventEmitter<void>();
@@ -61,11 +62,11 @@ export class FileToolbarComponent {
   }
 
   saveDocumentLocally() {
-    // Save document to local storage
-    this.fileService.saveDocumentLocally(this.documentId).subscribe(
+    // Save document to local storage and add to File Manager
+    this.fileService.saveDocumentLocally(this.documentId, this.documentName).subscribe(
       (success: boolean) => {
         if (success) {
-          this.showSaveNotification('Document saved locally');
+          this.showSaveNotification('Document saved locally and added to File Manager');
         } else {
           this.showSaveNotification('Failed to save document', 'error');
         }

@@ -18,6 +18,7 @@
   <div *ngIf="currentTab === 'file'">
     <app-file-toolbar
       [documentId]="documentId"
+      [documentName]="getCurrentDocumentName()"
       (newDocument)="onNewDocument()"
       (openDocument)="onOpenDocument()"
       (saveDocument)="onSaveDocument()"
