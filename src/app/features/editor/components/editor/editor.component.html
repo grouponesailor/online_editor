@@ -8,7 +8,7 @@
           [(ngModel)]="documentName"
           (blur)="saveDocumentName()"
           (keyup.enter)="saveDocumentName()"
-          class="text-lg font-medium bg-transparent border-none focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-2 py-1"
+          class="text-lg font-medium bg-transparent border-none focus:outline-none focus:ring-2 focus:ring-[#6200EE] rounded px-2 py-1"
           placeholder="Document name">
         
         <div class="flex items-center text-sm text-gray-600">
@@ -16,7 +16,7 @@
           <span>{{ getNetworkStatusText() }}</span>
           <button 
             (click)="refreshConnection()" 
-            class="ml-2 text-blue-600 hover:text-blue-800"
+            class="ml-2 text-blue-600 hover:text-[#6200EE] transition-colors"
             title="Refresh connection">
             <i class="fas fa-sync-alt"></i>
           </button>
@@ -40,7 +40,7 @@
         
         <button
           (click)="openShareDialog()"
-          class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">
+          class="bg-[#6200EE] text-white px-4 py-2 rounded-md hover:bg-[#5000CC] transition-colors">
           Share
         </button>
       </div>
@@ -83,4 +83,4 @@
     [documentUrl]="'http://localhost:4200/documents/' + documentId"
     (close)="showShareDialog = false">
   </app-share-dialog>
-</div> 
+</div>
