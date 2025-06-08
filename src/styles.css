@@ -41,39 +41,38 @@
 /* A4 Page Layout */
 .a4-page {
   width: 794px; /* A4 width at 96 DPI (210mm) */
-  min-height: 1123px; /* A4 height at 96 DPI (297mm) */
-  margin: 20px auto;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1), 0 6px 20px rgba(0, 0, 0, 0.1);
+  min-height: 100vh;
+  margin: 0 auto;
   background: white;
   position: relative;
 }
 
 .a4-editor {
-  width: 100%;
-  min-height: 1123px; /* Full A4 height */
-  padding: 72px; /* 1 inch margins (72px = 1 inch at 96 DPI) */
-  box-sizing: border-box;
+  width: 794px; /* A4 width at 96 DPI (210mm) */
+  min-height: 100vh;
+  background: white;
+  margin: 0 auto;
+  padding: 40px;
   font-family: 'Times New Roman', serif;
   font-size: 12pt;
   line-height: 1.5;
   color: #000;
-  
-  /* Remove TipTap's default prose styling for full control */
-  max-width: none !important;
+  position: relative;
+  box-sizing: border-box;
 }
 
 /* Override TipTap's prose styling for A4 layout */
 .a4-editor.tiptap {
   @apply p-0 border-0 rounded-none focus:ring-0;
-  padding: 72px; /* Restore our custom padding */
-  min-height: 1123px;
+  padding: 40px;
+  min-height: 100vh;
 }
 
 /* Ensure content can use full width */
 .a4-editor .ProseMirror {
   max-width: none !important;
   width: 100%;
-  min-height: calc(1123px - 144px); /* Full height minus top/bottom padding */
+  min-height: calc(100vh - 80px);
   outline: none;
 }
 
@@ -88,8 +87,10 @@
   }
   
   .a4-editor {
+    width: 210mm;
     min-height: 297mm;
-    padding: 25.4mm; /* 1 inch margins in mm */
+    padding: 12.7mm;
+    margin: 0 auto;
   }
 }
 
@@ -161,21 +162,126 @@
   @apply bg-gray-50 font-semibold;
 }
 
-/* Task lists */
+/* Lists */
+.tiptap ul:not([data-type="taskList"]) {
+  @apply list-disc pl-6 my-4;
+}
+
+.tiptap ol {
+  @apply list-decimal pl-6 my-4;
+}
+
+/* Comprehensive List Styles */
+/* Bullet Lists with different styles */
+.tiptap ul[style*="list-style-type: disc"] {
+  list-style-type: disc;
+}
+
+.tiptap ul[style*="list-style-type: circle"] {
+  list-style-type: circle;
+}
+
+.tiptap ul[style*="list-style-type: square"] {
+  list-style-type: square;
+}
+
+/* Ordered Lists with different numbering */
+.tiptap ol[style*="list-style-type: decimal"] {
+  list-style-type: decimal;
+}
+
+.tiptap ol[style*="list-style-type: lower-alpha"] {
+  list-style-type: lower-alpha;
+}
+
+.tiptap ol[style*="list-style-type: upper-alpha"] {
+  list-style-type: upper-alpha;
+}
+
+.tiptap ol[style*="list-style-type: lower-roman"] {
+  list-style-type: lower-roman;
+}
+
+.tiptap ol[style*="list-style-type: upper-roman"] {
+  list-style-type: upper-roman;
+}
+
+/* Enhanced list styling for better appearance */
+.tiptap ul li, .tiptap ol li {
+  margin-bottom: 4px;
+  line-height: 1.6;
+}
+
+/* Nested list styling */
+.tiptap ul ul, .tiptap ol ol, .tiptap ul ol, .tiptap ol ul {
+  margin-top: 4px;
+  margin-bottom: 4px;
+  padding-left: 24px;
+}
+
+/* Enhanced nested list styling with different bullet types */
+.tiptap ul {
+  list-style-type: disc;
+}
+
+.tiptap ul ul {
+  list-style-type: circle;
+  padding-left: 28px;
+}
+
+.tiptap ul ul ul {
+  list-style-type: square;
+  padding-left: 32px;
+}
+
+.tiptap ul ul ul ul {
+  list-style-type: disc;
+  padding-left: 36px;
+}
+
+/* Nested ordered lists with different numbering styles */
+.tiptap ol {
+  list-style-type: decimal;
+}
+
+.tiptap ol ol {
+  list-style-type: lower-alpha;
+  padding-left: 28px;
+}
+
+.tiptap ol ol ol {
+  list-style-type: lower-roman;
+  padding-left: 32px;
+}
+
+.tiptap ol ol ol ol {
+  list-style-type: decimal;
+  padding-left: 36px;
+}
+
+/* Task List Enhanced Styling */
 .tiptap ul[data-type="taskList"] {
-  @apply list-none p-0;
+  @apply list-none p-0 my-4;
 }
 
 .tiptap ul[data-type="taskList"] li {
-  @apply flex items-start gap-2 my-1;
+  @apply flex items-start gap-2 my-2;
 }
 
 .tiptap ul[data-type="taskList"] li > label {
-  @apply mt-1;
+  @apply mt-1 cursor-pointer;
+}
+
+.tiptap ul[data-type="taskList"] li > label input[type="checkbox"] {
+  @apply w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500;
 }
 
 .tiptap ul[data-type="taskList"] li > div {
   @apply flex-1;
+}
+
+.tiptap ul[data-type="taskList"] li[data-checked="true"] > div {
+  @apply line-through text-gray-500;
 }
 
 /* Code blocks - always LTR */
@@ -254,15 +360,6 @@
 
 .tiptap h6 {
   @apply text-base font-bold mb-1 mt-2;
-}
-
-/* Lists */
-.tiptap ul:not([data-type="taskList"]) {
-  @apply list-disc pl-6 my-4;
-}
-
-.tiptap ol {
-  @apply list-decimal pl-6 my-4;
 }
 
 /* Blockquotes */
@@ -348,6 +445,94 @@
 
 .a4-editor li {
   margin-bottom: 6pt;
+}
+
+/* A4 Document List Styles - Enhanced */
+.a4-editor ul[style*="list-style-type: disc"] {
+  list-style-type: disc;
+}
+
+.a4-editor ul[style*="list-style-type: circle"] {
+  list-style-type: circle;
+}
+
+.a4-editor ul[style*="list-style-type: square"] {
+  list-style-type: square;
+}
+
+.a4-editor ol[style*="list-style-type: decimal"] {
+  list-style-type: decimal;
+}
+
+.a4-editor ol[style*="list-style-type: lower-alpha"] {
+  list-style-type: lower-alpha;
+}
+
+.a4-editor ol[style*="list-style-type: upper-alpha"] {
+  list-style-type: upper-alpha;
+}
+
+.a4-editor ol[style*="list-style-type: lower-roman"] {
+  list-style-type: lower-roman;
+}
+
+.a4-editor ol[style*="list-style-type: upper-roman"] {
+  list-style-type: upper-roman;
+}
+
+/* A4 Task Lists */
+.a4-editor ul[data-type="taskList"] {
+  list-style: none;
+  padding-left: 0;
+  margin-bottom: 12pt;
+}
+
+.a4-editor ul[data-type="taskList"] li {
+  display: flex;
+  align-items: flex-start;
+  gap: 6pt;
+  margin-bottom: 6pt;
+}
+
+.a4-editor ul[data-type="taskList"] li > label input[type="checkbox"] {
+  margin-top: 2pt;
+  width: 12pt;
+  height: 12pt;
+}
+
+/* A4 Document Nested Lists */
+.a4-editor ul ul, .a4-editor ol ol, .a4-editor ul ol, .a4-editor ol ul {
+  margin-top: 6pt;
+  margin-bottom: 6pt;
+  padding-left: 24pt;
+}
+
+.a4-editor ul {
+  list-style-type: disc;
+}
+
+.a4-editor ul ul {
+  list-style-type: circle;
+  padding-left: 30pt;
+}
+
+.a4-editor ul ul ul {
+  list-style-type: square;
+  padding-left: 36pt;
+}
+
+.a4-editor ol {
+  list-style-type: decimal;
+}
+
+.a4-editor ol ol {
+  list-style-type: lower-alpha;
+  padding-left: 30pt;
+}
+
+.a4-editor ol ol ol {
+  list-style-type: lower-roman;
+  padding-left: 36pt;
 }
 
 /* Auto-detect RTL text and apply appropriate styling */
