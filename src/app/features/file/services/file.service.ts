@@ -199,4 +199,121 @@ export class FileService {
     ];
     return of(history).pipe(delay(300));
   }
+
+  // Save document locally using localStorage
+  saveDocumentLocally(documentId: string): Observable<boolean> {
+    try {
+      // Get current document content (this would normally come from the editor)
+      const documentContent = this.getCurrentDocumentContent(documentId);
+      
+      // Create save data
+      const saveData = {
+        id: documentId,
+        content: documentContent,
+        lastSaved: new Date().toISOString(),
+        version: this.getNextVersion(documentId)
+      };
+
+      // Save to localStorage
+      const storageKey = `document_${documentId}_local`;
+      localStorage.setItem(storageKey, JSON.stringify(saveData));
+
+      // Also update the document's last modified time
+      const docIndex = this.mockDocuments.findIndex(doc => doc.id === documentId);
+      if (docIndex > -1) {
+        this.mockDocuments[docIndex].lastModified = new Date();
+      }
+
+      // Save to recent saves list
+      this.addToRecentSaves(documentId);
+
+      return of(true).pipe(delay(100));
+    } catch (error) {
+      console.error('Failed to save document locally:', error);
+      return of(false).pipe(delay(100));
+    }
+  }
+
+  private getCurrentDocumentContent(documentId: string): string {
+    // In a real implementation, this would get content from the editor
+    // For now, return mock content
+    return `Document content for ${documentId} - saved at ${new Date().toISOString()}`;
+  }
+
+  private getNextVersion(documentId: string): number {
+    const storageKey = `document_${documentId}_local`;
+    const existing = localStorage.getItem(storageKey);
+    if (existing) {
+      const data = JSON.parse(existing);
+      return (data.version || 0) + 1;
+    }
+    return 1;
+  }
+
+  private addToRecentSaves(documentId: string) {
+    const recentSavesKey = 'recent_local_saves';
+    let recentSaves = [];
+    
+    try {
+      const existing = localStorage.getItem(recentSavesKey);
+      if (existing) {
+        recentSaves = JSON.parse(existing);
+      }
+    } catch (error) {
+      recentSaves = [];
+    }
+
+    // Add current document to the beginning, remove duplicates
+    recentSaves = recentSaves.filter((id: string) => id !== documentId);
+    recentSaves.unshift(documentId);
+    
+    // Keep only the last 10 saves
+    recentSaves = recentSaves.slice(0, 10);
+    
+    localStorage.setItem(recentSavesKey, JSON.stringify(recentSaves));
+  }
+
+  // Get locally saved documents
+  getLocallySavedDocuments(): Observable<any[]> {
+    const savedDocs = [];
+    
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('document_') && key.endsWith('_local')) {
+        try {
+          const data = JSON.parse(localStorage.getItem(key) || '{}');
+          savedDocs.push({
+            documentId: data.id,
+            lastSaved: data.lastSaved,
+            version: data.version,
+            storageKey: key
+          });
+        } catch (error) {
+          console.error('Error parsing saved document:', error);
+        }
+      }
+    }
+    
+    // Sort by last saved date
+    savedDocs.sort((a, b) => new Date(b.lastSaved).getTime() - new Date(a.lastSaved).getTime());
+    
+    return of(savedDocs).pipe(delay(100));
+  }
+
+  // Load locally saved document
+  loadLocalDocument(documentId: string): Observable<any> {
+    const storageKey = `document_${documentId}_local`;
+    const saved = localStorage.getItem(storageKey);
+    
+    if (saved) {
+      try {
+        const data = JSON.parse(saved);
+        return of(data).pipe(delay(100));
+      } catch (error) {
+        return throwError('Failed to parse saved document');
+      }
+    }
+    
+    return throwError('No local save found for this document');
+  }
 }

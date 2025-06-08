@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, HostListener } from '@angular/core';
 import { FileService } from '../../services/file.service';
 
 @Component({
@@ -15,6 +15,15 @@ export class FileToolbarComponent {
 
   constructor(private fileService: FileService) {}
 
+  // Listen for Ctrl+S keyboard shortcut
+  @HostListener('document:keydown', ['$event'])
+  handleKeyboardEvent(event: KeyboardEvent) {
+    if (event.ctrlKey && event.key === 's') {
+      event.preventDefault(); // Prevent browser's default save dialog
+      this.saveDocumentLocally();
+    }
+  }
+
   onNewDocument() {
     this.newDocument.emit();
   }
@@ -25,6 +34,41 @@ export class FileToolbarComponent {
 
   onSaveDocument() {
     this.saveDocument.emit();
+  }
+
+  saveDocumentLocally() {
+    // Save document to local storage
+    this.fileService.saveDocumentLocally(this.documentId).subscribe(
+      (success: boolean) => {
+        if (success) {
+          this.showSaveNotification('Document saved locally');
+        } else {
+          this.showSaveNotification('Failed to save document', 'error');
+        }
+      }
+    );
+    
+    // Also emit the save event for parent components
+    this.saveDocument.emit();
+  }
+
+  private showSaveNotification(message: string, type: 'success' | 'error' = 'success') {
+    // Create a temporary notification element
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 px-4 py-2 rounded-md text-white z-50 transition-opacity duration-300 ${
+      type === 'success' ? 'bg-green-500' : 'bg-red-500'
+    }`;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    // Auto-hide after 3 seconds
+    setTimeout(() => {
+      notification.style.opacity = '0';
+      setTimeout(() => {
+        document.body.removeChild(notification);
+      }, 300);
+    }, 3000);
   }
 
   onExportPDF() {

@@ -25,8 +25,8 @@
   <div class="flex gap-1 border-r pr-2">
     <button
       class="p-2 rounded hover:bg-gray-100 hover:text-[#6200EE] transition-colors"
-      (click)="onSaveDocument()"
-      title="Save">
+      (click)="saveDocumentLocally()"
+      title="Save (Ctrl+S)">
       <i class="fas fa-save"></i>
     </button>
     <button
@@ -72,5 +72,10 @@
       title="File Manager">
       <i class="fas fa-folder"></i>
     </button>
+  </div>
+
+  <!-- Save Status Indicator -->
+  <div class="flex items-center text-xs text-gray-500 ml-2">
+    <span>Press Ctrl+S to save locally</span>
   </div>
 </div>
