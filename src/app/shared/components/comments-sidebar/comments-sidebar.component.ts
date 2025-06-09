@@ -51,6 +51,11 @@ export class CommentsSidebarComponent {
   activeTab: string = 'comments';
   showCollaboratorMenu: string | null = null;
   newCollaboratorEmail: string = '';
+  newCommentText: string = '';
+  
+  // AI functionality properties - explicitly declared
+  isSummarizing: boolean = false;
+  aiSummary: string | null = null;
 
   tabs: Tab[] = [
     { id: 'comments', label: 'Comments', icon: 'fas fa-comments' },
@@ -183,19 +188,13 @@ export class CommentsSidebarComponent {
     }
   ];
 
-  newCommentText: string = '';
-  
-  // AI functionality
-  isSummarizing: boolean = false;
-  aiSummary: string | null = null;
-
-  setActiveTab(tabId: string) {
+  setActiveTab(tabId: string): void {
     this.activeTab = tabId;
     this.showCollaboratorMenu = null; // Close any open menus
   }
 
   // Comments functionality
-  addComment() {
+  addComment(): void {
     if (!this.newCommentText.trim()) return;
 
     const newComment: Comment = {
@@ -212,12 +211,12 @@ export class CommentsSidebarComponent {
     this.newCommentText = '';
   }
 
-  replyToComment(comment: Comment) {
+  replyToComment(comment: Comment): void {
     // Implement reply functionality
     console.log('Reply to comment:', comment);
   }
 
-  resolveComment(comment: Comment) {
+  resolveComment(comment: Comment): void {
     // Implement resolve functionality
     const index = this.comments.findIndex(c => c.id === comment.id);
     if (index > -1) {
@@ -226,12 +225,12 @@ export class CommentsSidebarComponent {
   }
 
   // Version history functionality
-  viewVersion(version: VersionHistory) {
+  viewVersion(version: VersionHistory): void {
     console.log('View version:', version);
     // Implement version viewing functionality
   }
 
-  restoreVersion(version: VersionHistory) {
+  restoreVersion(version: VersionHistory): void {
     if (confirm(`Are you sure you want to restore to version ${version.version}? This will overwrite current changes.`)) {
       console.log('Restore version:', version);
       // Implement version restoration functionality
@@ -239,7 +238,7 @@ export class CommentsSidebarComponent {
   }
 
   // Collaborators functionality
-  toggleCollaboratorMenu(collaboratorId: string) {
+  toggleCollaboratorMenu(collaboratorId: string): void {
     this.showCollaboratorMenu = this.showCollaboratorMenu === collaboratorId ? null : collaboratorId;
   }
 
@@ -248,7 +247,7 @@ export class CommentsSidebarComponent {
     return emailRegex.test(email);
   }
 
-  addCollaborator() {
+  addCollaborator(): void {
     if (!this.isValidEmail(this.newCollaboratorEmail)) return;
 
     // Check if collaborator already exists
@@ -276,7 +275,7 @@ export class CommentsSidebarComponent {
     console.log('Collaborator invited:', newCollaborator);
   }
 
-  changeRole(collaborator: Collaborator) {
+  changeRole(collaborator: Collaborator): void {
     const newRole = prompt(`Change role for ${collaborator.name}:\n\nCurrent role: ${collaborator.role}\n\nEnter new role (owner/editor/viewer):`, collaborator.role);
     if (newRole && ['owner', 'editor', 'viewer'].includes(newRole)) {
       collaborator.role = newRole as 'owner' | 'editor' | 'viewer';
@@ -284,7 +283,7 @@ export class CommentsSidebarComponent {
     }
   }
 
-  sendMessage(collaborator: Collaborator) {
+  sendMessage(collaborator: Collaborator): void {
     const message = prompt(`Send a message to ${collaborator.name}:`);
     if (message) {
       console.log(`Message sent to ${collaborator.name}: ${message}`);
@@ -292,7 +291,7 @@ export class CommentsSidebarComponent {
     }
   }
 
-  removeCollaborator(collaborator: Collaborator) {
+  removeCollaborator(collaborator: Collaborator): void {
     if (confirm(`Remove ${collaborator.name} from this document?`)) {
       const index = this.allCollaborators.findIndex(c => c.id === collaborator.id);
       if (index > -1) {
@@ -314,8 +313,8 @@ export class CommentsSidebarComponent {
     return colors[Math.floor(Math.random() * colors.length)];
   }
 
-  // AI functionality
-  async summarizeDocument() {
+  // AI functionality methods - explicitly declared with proper return types
+  async summarizeDocument(): Promise<void> {
     if (!this.editor) {
       console.warn('No editor available for summarization');
       return;
@@ -388,7 +387,7 @@ export class CommentsSidebarComponent {
     return finalSummary;
   }
 
-  async copyToClipboard(text: string) {
+  async copyToClipboard(text: string): Promise<void> {
     try {
       await navigator.clipboard.writeText(text);
       // Show temporary success message
@@ -405,7 +404,7 @@ export class CommentsSidebarComponent {
     }
   }
 
-  insertSummaryIntoDocument() {
+  insertSummaryIntoDocument(): void {
     if (!this.editor || !this.aiSummary) return;
 
     // Insert the summary at the current cursor position
