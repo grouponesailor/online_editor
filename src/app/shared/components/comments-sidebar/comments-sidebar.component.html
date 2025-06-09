@@ -134,84 +134,181 @@
       </div>
     </div>
 
-    <!-- Collaborators Tab -->
-    <div *ngIf="activeTab === 'collaborators'" class="h-full flex flex-col">
+    <!-- AI Tab -->
+    <div *ngIf="activeTab === 'ai'" class="h-full flex flex-col">
       <div class="p-4 border-b">
-        <h2 class="text-lg font-semibold">Collaborators</h2>
+        <h2 class="text-lg font-semibold">AI Assistant</h2>
       </div>
 
-      <!-- Active Collaborators -->
+      <!-- Translation Section -->
       <div class="p-4 border-b">
-        <h3 class="text-sm font-medium text-gray-700 mb-3">Currently Active</h3>
-        <div *ngIf="activeCollaborators.length === 0" class="text-center text-gray-500 py-4">
-          <i class="fas fa-user-friends text-2xl mb-2"></i>
-          <p class="text-sm">No active collaborators</p>
+        <h3 class="text-sm font-medium text-gray-700 mb-3">
+          <i class="fas fa-language mr-2"></i>
+          Translate Document
+        </h3>
+        
+        <!-- Language Selection -->
+        <div class="space-y-3">
+          <div>
+            <label class="block text-xs text-gray-600 mb-1">From Language</label>
+            <select
+              [(ngModel)]="sourceLanguage"
+              class="w-full text-sm border border-gray-300 rounded px-2 py-1 focus:border-[#6200EE] focus:ring-1 focus:ring-[#6200EE]">
+              <option value="auto">Auto-detect</option>
+              <option *ngFor="let lang of supportedLanguages" [value]="lang.code">
+                {{ lang.name }}
+              </option>
+            </select>
+          </div>
+          
+          <div>
+            <label class="block text-xs text-gray-600 mb-1">To Language</label>
+            <select
+              [(ngModel)]="targetLanguage"
+              class="w-full text-sm border border-gray-300 rounded px-2 py-1 focus:border-[#6200EE] focus:ring-1 focus:ring-[#6200EE]">
+              <option *ngFor="let lang of supportedLanguages" [value]="lang.code">
+                {{ lang.name }}
+              </option>
+            </select>
+          </div>
+          
+          <!-- Translation Options -->
+          <div class="space-y-2">
+            <label class="flex items-center text-sm">
+              <input
+                type="checkbox"
+                [(ngModel)]="preserveFormatting"
+                class="mr-2 rounded border-gray-300 text-[#6200EE] focus:ring-[#6200EE]">
+              Preserve formatting
+            </label>
+            <label class="flex items-center text-sm">
+              <input
+                type="checkbox"
+                [(ngModel)]="translateInPlace"
+                class="mr-2 rounded border-gray-300 text-[#6200EE] focus:ring-[#6200EE]">
+              Replace original text
+            </label>
+          </div>
+          
+          <!-- Translate Button -->
+          <button
+            class="w-full bg-[#6200EE] text-white px-3 py-2 rounded text-sm hover:bg-[#5000CC] transition-colors flex items-center justify-center"
+            [disabled]="isTranslating || !targetLanguage"
+            (click)="translateDocument()">
+            <i *ngIf="!isTranslating" class="fas fa-language mr-2"></i>
+            <i *ngIf="isTranslating" class="fas fa-spinner fa-spin mr-2"></i>
+            {{ isTranslating ? 'Translating...' : 'Translate Document' }}
+          </button>
         </div>
-        <div *ngFor="let collaborator of activeCollaborators" class="flex items-center gap-3 mb-3">
-          <div class="relative">
-            <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-              <img *ngIf="collaborator.avatar" [src]="collaborator.avatar" [alt]="collaborator.name" class="w-10 h-10 rounded-full">
-              <i *ngIf="!collaborator.avatar" class="fas fa-user text-gray-400"></i>
-            </div>
-            <div class="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full"></div>
-          </div>
-          <div class="flex-1">
-            <div class="font-medium text-sm">{{ collaborator.name }}</div>
-            <div class="text-xs text-gray-500">{{ collaborator.status }}</div>
-          </div>
-          <div class="w-3 h-3 rounded-full" [style.background-color]="collaborator.cursorColor"></div>
+        
+        <!-- Translation Status -->
+        <div *ngIf="translationStatus" class="mt-3 p-2 rounded text-sm" 
+             [class.bg-green-50]="translationStatus.type === 'success'"
+             [class.text-green-700]="translationStatus.type === 'success'"
+             [class.bg-red-50]="translationStatus.type === 'error'"
+             [class.text-red-700]="translationStatus.type === 'error'"
+             [class.bg-blue-50]="translationStatus.type === 'info'"
+             [class.text-blue-700]="translationStatus.type === 'info'">
+          <i class="fas fa-check-circle mr-1" *ngIf="translationStatus.type === 'success'"></i>
+          <i class="fas fa-exclamation-circle mr-1" *ngIf="translationStatus.type === 'error'"></i>
+          <i class="fas fa-info-circle mr-1" *ngIf="translationStatus.type === 'info'"></i>
+          {{ translationStatus.message }}
         </div>
       </div>
 
-      <!-- All Collaborators -->
+      <!-- AI Writing Assistant -->
+      <div class="p-4 border-b">
+        <h3 class="text-sm font-medium text-gray-700 mb-3">
+          <i class="fas fa-pen-fancy mr-2"></i>
+          Writing Assistant
+        </h3>
+        
+        <div class="space-y-2">
+          <button
+            class="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 rounded transition-colors flex items-center"
+            (click)="improveWriting()">
+            <i class="fas fa-magic mr-2 text-purple-500"></i>
+            Improve Writing
+          </button>
+          <button
+            class="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 rounded transition-colors flex items-center"
+            (click)="fixGrammar()">
+            <i class="fas fa-spell-check mr-2 text-green-500"></i>
+            Fix Grammar & Spelling
+          </button>
+          <button
+            class="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 rounded transition-colors flex items-center"
+            (click)="summarizeContent()">
+            <i class="fas fa-compress-alt mr-2 text-blue-500"></i>
+            Summarize Content
+          </button>
+          <button
+            class="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 rounded transition-colors flex items-center"
+            (click)="changeTone()">
+            <i class="fas fa-user-tie mr-2 text-orange-500"></i>
+            Change Tone
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
       <div class="flex-1 overflow-y-auto p-4">
-        <h3 class="text-sm font-medium text-gray-700 mb-3">All Collaborators</h3>
-        <div *ngFor="let collaborator of allCollaborators" class="flex items-center gap-3 mb-3">
-          <div class="relative">
-            <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
-              <img *ngIf="collaborator.avatar" [src]="collaborator.avatar" [alt]="collaborator.name" class="w-8 h-8 rounded-full">
-              <i *ngIf="!collaborator.avatar" class="fas fa-user text-gray-400"></i>
-            </div>
-            <div *ngIf="collaborator.isOnline" class="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
-          </div>
-          <div class="flex-1">
-            <div class="font-medium text-sm">{{ collaborator.name }}</div>
-            <div class="text-xs text-gray-500">{{ collaborator.role }} • {{ collaborator.lastSeen | date:'short' }}</div>
-          </div>
-          <div class="relative">
-            <button class="text-gray-400 hover:text-gray-600 transition-colors" (click)="toggleCollaboratorMenu(collaborator.id)">
-              <i class="fas fa-ellipsis-v"></i>
-            </button>
-            <div *ngIf="showCollaboratorMenu === collaborator.id" class="absolute right-0 top-6 bg-white shadow-lg rounded border py-1 z-10 w-32">
-              <button class="block w-full px-3 py-1 text-left text-sm hover:bg-gray-100 transition-colors" (click)="changeRole(collaborator)">
-                Change Role
-              </button>
-              <button class="block w-full px-3 py-1 text-left text-sm hover:bg-gray-100 transition-colors" (click)="sendMessage(collaborator)">
-                Send Message
-              </button>
-              <button class="block w-full px-3 py-1 text-left text-sm text-red-600 hover:bg-red-50 transition-colors" (click)="removeCollaborator(collaborator)">
-                Remove
-              </button>
-            </div>
-          </div>
+        <h3 class="text-sm font-medium text-gray-700 mb-3">
+          <i class="fas fa-bolt mr-2"></i>
+          Quick Actions
+        </h3>
+        
+        <div class="space-y-2">
+          <button
+            class="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 rounded transition-colors flex items-center"
+            (click)="generateOutline()">
+            <i class="fas fa-list-ol mr-2 text-indigo-500"></i>
+            Generate Outline
+          </button>
+          <button
+            class="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 rounded transition-colors flex items-center"
+            (click)="addConclusion()">
+            <i class="fas fa-flag-checkered mr-2 text-red-500"></i>
+            Add Conclusion
+          </button>
+          <button
+            class="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 rounded transition-colors flex items-center"
+            (click)="expandContent()">
+            <i class="fas fa-expand-arrows-alt mr-2 text-teal-500"></i>
+            Expand Content
+          </button>
         </div>
       </div>
 
-      <!-- Add Collaborator -->
+      <!-- AI Chat -->
       <div class="p-4 border-t bg-white">
-        <div class="flex gap-2">
+        <h3 class="text-sm font-medium text-gray-700 mb-3">
+          <i class="fas fa-comments mr-2"></i>
+          Ask AI
+        </h3>
+        <div class="flex gap-2 mb-3">
           <input
             type="email"
-            [(ngModel)]="newCollaboratorEmail"
-            placeholder="Enter email address..."
-            class="flex-1 rounded border-gray-300 shadow-sm focus:border-[#6200EE] focus:ring-1 focus:ring-[#6200EE] text-sm"
-          />
+            [(ngModel)]="aiQuestion"
+            placeholder="Ask AI about your document..."
+            class="flex-1 rounded border-gray-300 shadow-sm focus:border-[#6200EE] focus:ring-1 focus:ring-[#6200EE] text-sm">
           <button
             class="px-3 py-2 bg-[#6200EE] text-white rounded hover:bg-[#5000CC] transition-colors text-sm"
-            [disabled]="!isValidEmail(newCollaboratorEmail)"
-            (click)="addCollaborator()">
-            <i class="fas fa-plus"></i>
+            [disabled]="!aiQuestion.trim() || isProcessingAI"
+            (click)="askAI()">
+            <i *ngIf="!isProcessingAI" class="fas fa-paper-plane"></i>
+            <i *ngIf="isProcessingAI" class="fas fa-spinner fa-spin"></i>
           </button>
+        </div>
+        
+        <!-- AI Response -->
+        <div *ngIf="aiResponse" class="bg-gray-50 rounded p-3 text-sm">
+          <div class="flex items-start gap-2">
+            <i class="fas fa-robot text-[#6200EE] mt-1"></i>
+            <div class="flex-1">
+              <p class="whitespace-pre-wrap">{{ aiResponse }}</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
