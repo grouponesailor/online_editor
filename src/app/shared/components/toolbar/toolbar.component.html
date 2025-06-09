@@ -110,6 +110,80 @@
         [title]="item.label">
         <i [class]="item.icon"></i>
       </button>
+
+      <!-- Text Color -->
+      <div class="relative color-palette-container">
+        <div class="flex flex-col items-center">
+          <button
+            class="p-2 rounded hover:bg-gray-100 flex items-center gap-1"
+            (click)="showTextColorPalette = !showTextColorPalette"
+            [title]="'Text Color'">
+            <i class="fas fa-font"></i>
+            <i class="fas fa-chevron-down text-xs"></i>
+          </button>
+          <div class="w-4 h-1 mt-1 rounded-sm" [style.background-color]="currentTextColor"></div>
+        </div>
+        <div *ngIf="showTextColorPalette" class="absolute top-full left-0 mt-2 bg-white shadow-lg rounded-lg p-3 z-50 min-w-[200px]">
+          <div class="grid grid-cols-5 gap-2 mb-3">
+            <button
+              *ngFor="let color of commonColors"
+              class="w-8 h-8 rounded-lg border-2 hover:scale-110 transition-transform relative"
+              [style.background-color]="color"
+              [style.border-color]="color === currentTextColor ? '#6200EE' : 'transparent'"
+              (click)="applyTextColor(color)"
+              [title]="color">
+              <div *ngIf="color === currentTextColor" class="absolute inset-0 flex items-center justify-center">
+                <i class="fas fa-check text-white text-xs" [style.color]="isLightColor(color) ? '#000' : '#fff'"></i>
+              </div>
+            </button>
+          </div>
+          <div class="flex items-center gap-3 pt-3 border-t border-gray-200">
+            <input
+              type="color"
+              [(ngModel)]="customTextColor"
+              class="w-8 h-8 rounded cursor-pointer"
+              (change)="applyTextColor(customTextColor)">
+            <span class="text-sm text-gray-600">Custom Color</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Highlight Color -->
+      <div class="relative color-palette-container">
+        <div class="flex flex-col items-center">
+          <button
+            class="p-2 rounded hover:bg-gray-100 flex items-center gap-1"
+            (click)="showHighlightPalette = !showHighlightPalette"
+            [title]="'Highlight Color'">
+            <i class="fas fa-highlighter"></i>
+            <i class="fas fa-chevron-down text-xs"></i>
+          </button>
+          <div class="w-4 h-1 mt-1 rounded-sm" [style.background-color]="currentHighlightColor"></div>
+        </div>
+        <div *ngIf="showHighlightPalette" class="absolute top-full left-0 mt-2 bg-white shadow-lg rounded-lg p-3 z-50 min-w-[200px]">
+          <div class="grid grid-cols-5 gap-2 mb-3">
+            <button
+              *ngFor="let color of highlightColors"
+              class="w-8 h-8 rounded-lg border-2 hover:scale-110 transition-transform relative"
+              [style.background-color]="color"
+              [style.border-color]="color === currentHighlightColor ? '#6200EE' : 'transparent'"
+              (click)="applyHighlight(color)"
+              [title]="color">
+              <div *ngIf="color === currentHighlightColor" class="absolute inset-0 flex items-center justify-center">
+                <i class="fas fa-check text-white text-xs" [style.color]="isLightColor(color) ? '#000' : '#fff'"></i>
+              </div>
+            </button>
+          </div>
+          <div class="flex items-center gap-3 pt-3 border-t border-gray-200">
+            <input
+              type="color"
+              [(ngModel)]="customHighlightColor"
+              class="w-8 h-8 rounded cursor-pointer"
+              (change)="applyHighlight(customHighlightColor)">
+            <span class="text-sm text-gray-600">Custom Color</span>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Lists -->
@@ -175,7 +249,7 @@
   <div *ngIf="currentTab === 'insert'" class="flex flex-wrap gap-1 p-1">
     <!-- Table -->
     <div class="flex gap-1 border-r pr-2">
-      <div class="relative">
+      <div class="relative dropdown-container">
         <button
           class="p-2 rounded hover:bg-gray-100 hover:text-[#6200EE] transition-colors flex items-center"
           (click)="showTableMenu = !showTableMenu"
@@ -202,7 +276,7 @@
 
     <!-- Image -->
     <div class="flex gap-1 border-r pr-2">
-      <div class="relative">
+      <div class="relative dropdown-container">
         <button
           class="p-2 rounded hover:bg-gray-100 hover:text-[#6200EE] transition-colors flex items-center"
           (click)="showImageMenu = !showImageMenu"
@@ -210,7 +284,7 @@
           <i class="fas fa-image"></i>
           <i class="fas fa-chevron-down ml-1"></i>
         </button>
-        <div *ngIf="showImageMenu" class="absolute top-full left-0 mt-1 bg-white shadow-lg rounded py-1 z-50 w-48">
+        <div *ngIf="showImageMenu" class="absolute top-full left-0 mt-1 bg-white shadow-lg rounded-lg py-2 z-50 w-48">
           <button
             class="block w-full px-4 py-2 text-left hover:bg-gray-100 hover:text-[#6200EE] transition-colors"
             (click)="uploadImage()">
@@ -364,11 +438,11 @@
     <input
       type="color"
       [(ngModel)]="currentTextColor"
-      (change)="applyTextColor()"
+      (change)="applyTextColor(currentTextColor)"
       class="w-full h-12 rounded border hover:border-[#6200EE] focus:border-[#6200EE] transition-colors">
     <div class="flex gap-2 mt-4">
       <button class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 transition-colors" (click)="showTextColorPicker = false">Cancel</button>
-      <button class="px-4 py-2 bg-[#6200EE] text-white rounded hover:bg-[#5000CC] transition-colors" (click)="applyTextColor()">Apply</button>
+      <button class="px-4 py-2 bg-[#6200EE] text-white rounded hover:bg-[#5000CC] transition-colors" (click)="applyTextColor(currentTextColor)">Apply</button>
     </div>
   </div>
 </div>
@@ -380,11 +454,11 @@
     <input
       type="color"
       [(ngModel)]="currentHighlightColor"
-      (change)="applyHighlight()"
+      (change)="applyHighlight(currentHighlightColor)"
       class="w-full h-12 rounded border hover:border-[#6200EE] focus:border-[#6200EE] transition-colors">
     <div class="flex gap-2 mt-4">
       <button class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 transition-colors" (click)="showHighlightPicker = false">Cancel</button>
-      <button class="px-4 py-2 bg-[#6200EE] text-white rounded hover:bg-[#5000CC] transition-colors" (click)="applyHighlight()">Apply</button>
+      <button class="px-4 py-2 bg-[#6200EE] text-white rounded hover:bg-[#5000CC] transition-colors" (click)="applyHighlight(currentHighlightColor)">Apply</button>
     </div>
   </div>
 </div>

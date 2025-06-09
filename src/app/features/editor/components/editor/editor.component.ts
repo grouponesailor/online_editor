@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit, ViewChildren, QueryList } from '@angular/core';
 import { Editor, Extension, RawCommands, ChainedCommands, CommandProps, Mark } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
 import Collaboration from '@tiptap/extension-collaboration';
@@ -29,7 +29,8 @@ import { Shape } from '../../../../extensions/shape';
 import { NetworkConfigService } from '../../../../core/services/network-config.service';
 import { ShareService } from '../../../../core/services/share.service';
 import { FileService } from '../../../file/services/file.service';
-import { Subject, takeUntil, debounceTime } from 'rxjs';
+import { Subject, takeUntil, debounceTime, fromEvent } from 'rxjs';
+import { Subscription } from 'rxjs';
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -133,6 +134,8 @@ const LineHeight = Extension.create({
 })
 export class EditorComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('editorElement') private editorElement!: ElementRef;
+  @ViewChildren('editorElement') editorElements!: QueryList<ElementRef>;
+  
   editor: Editor | null = null;
   documentId: string = '';
   documentName: string = 'Untitled Document';
@@ -142,6 +145,14 @@ export class EditorComponent implements OnInit, OnDestroy, AfterViewInit {
   showShareDialog = false;
   lastSaved: Date | null = null;
   collaborators: any[] = [];
+  pages: number[] = [0];
+  currentPage: number = 0;
+  currentZoom: number = 1;
+  
+  // Document statistics
+  wordCount: number = 0;
+  charCount: number = 0;
+  paragraphCount: number = 0;
   
   private destroy$ = new Subject<void>();
   private ydoc: Y.Doc;
@@ -150,6 +161,8 @@ export class EditorComponent implements OnInit, OnDestroy, AfterViewInit {
   private userColor: string;
   private saveDebouncer = new Subject<void>();
   private nameChangeDebouncer = new Subject<string>();
+  private resizeObserver: ResizeObserver | null = null;
+  private contentChangeSubscription: Subscription | null = null;
 
   constructor(
     private route: ActivatedRoute,
@@ -207,6 +220,9 @@ export class EditorComponent implements OnInit, OnDestroy, AfterViewInit {
           this.syncOfflineChanges();
         }
       });
+
+    this.initializeEditor();
+    this.setupPageManagement();
   }
 
   ngAfterViewInit() {
@@ -215,6 +231,8 @@ export class EditorComponent implements OnInit, OnDestroy, AfterViewInit {
     setTimeout(() => {
       this.initializeEditor();
     }, 0);
+
+    this.setupResizeObserver();
   }
 
   ngOnDestroy() {
@@ -223,6 +241,8 @@ export class EditorComponent implements OnInit, OnDestroy, AfterViewInit {
     this.editor?.destroy();
     this.ydoc.destroy();
     this.provider?.destroy();
+    this.resizeObserver?.disconnect();
+    this.contentChangeSubscription?.unsubscribe();
   }
 
   private loadDocumentName() {
@@ -387,6 +407,11 @@ export class EditorComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private initializeEditor() {
+    if (!this.editorElement?.nativeElement) {
+      console.warn('Editor element not found, waiting for view initialization');
+      return;
+    }
+
     const extensions = [
       StarterKit.configure({
         codeBlock: false,
@@ -474,7 +499,7 @@ export class EditorComponent implements OnInit, OnDestroy, AfterViewInit {
       extensions,
       editorProps: {
         attributes: {
-          class: 'a4-editor tiptap',
+          class: 'a4-editor tiptap prose prose-sm sm:prose lg:prose-lg xl:prose-xl focus:outline-none',
         },
         handleDOMEvents: {
           drop: (view, event) => {
@@ -575,7 +600,7 @@ export class EditorComponent implements OnInit, OnDestroy, AfterViewInit {
           return false;
         },
       },
-      onUpdate: () => {
+      onUpdate: ({ editor }) => {
         // Trigger auto-save for offline mode
         if (this.networkStatus === 'offline') {
           this.hasOfflineChanges = true;
@@ -583,6 +608,12 @@ export class EditorComponent implements OnInit, OnDestroy, AfterViewInit {
         } else {
           this.lastSaved = new Date();
         }
+        
+        // Update document statistics
+        this.updateDocumentStats();
+        
+        // Check content height and add new pages if needed
+        this.checkPageBreaks();
         
         // Auto-detect and fix RTL text direction for better cursor positioning
         this.handleRTLTextDirection();
@@ -736,5 +767,130 @@ export class EditorComponent implements OnInit, OnDestroy, AfterViewInit {
     }
     
     return null;
+  }
+
+  private setupPageManagement() {
+    // Listen for content changes and window resize
+    this.contentChangeSubscription = fromEvent(window, 'resize')
+      .pipe(debounceTime(200))
+      .subscribe(() => {
+        this.checkPageBreaks();
+      });
+
+    // Initial page setup
+    if (!this.pages.length) {
+      this.pages = [0];
+    }
+  }
+
+  private setupResizeObserver() {
+    this.resizeObserver = new ResizeObserver(() => {
+      this.checkPageBreaks();
+    });
+
+    this.editorElements.forEach(element => {
+      this.resizeObserver?.observe(element.nativeElement);
+    });
+  }
+
+  private checkPageBreaks() {
+    if (!this.editor || !this.editorElements) return;
+
+    const editorContent = this.editor.getHTML();
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = editorContent;
+    tempDiv.style.width = '170mm'; // A4 width minus margins
+    tempDiv.style.visibility = 'hidden';
+    document.body.appendChild(tempDiv);
+
+    const contentHeight = tempDiv.offsetHeight;
+    const pageHeight = 257; // Height in mm (A4 height - margins)
+    const requiredPages = Math.max(1, Math.ceil(contentHeight / pageHeight));
+
+    document.body.removeChild(tempDiv);
+
+    // Update pages array if needed
+    if (requiredPages > this.pages.length) {
+      const newPages = Array(requiredPages).fill(0).map((_, i) => i);
+      this.pages = newPages;
+      
+      // Trigger change detection
+      setTimeout(() => {
+        this.editorElements.forEach((element, index) => {
+          if (!element?.nativeElement) return;
+          
+          const el = element.nativeElement;
+          if (index === 0) {
+            // First page gets the editor instance
+            if (!this.editor) return;
+            this.editor.setOptions({
+              element: el
+            });
+          }
+        });
+      });
+    }
+  }
+
+  // Add this new method to handle content distribution
+  private distributeContent() {
+    if (!this.editor || !this.editorElements) return;
+
+    const content = this.editor.getHTML();
+    const pageHeight = 257; // mm
+
+    this.editorElements.forEach((element, index) => {
+      if (!element?.nativeElement) return;
+      
+      const el = element.nativeElement;
+      if (index === 0) {
+        el.innerHTML = content;
+      }
+    });
+  }
+
+  // Document statistics methods
+  private updateDocumentStats() {
+    if (!this.editor) return;
+
+    const text = this.editor.getText();
+    
+    // Calculate word count
+    this.wordCount = text.trim()
+      ? text.trim().split(/\s+/).length
+      : 0;
+
+    // Calculate character count (excluding spaces)
+    this.charCount = text.replace(/\s/g, '').length;
+
+    // Calculate paragraph count
+    const content = this.editor.getJSON()?.content;
+    this.paragraphCount = content
+      ? content.filter(node => node.type === 'paragraph' && node.content && node.content.length > 0).length
+      : 0;
+  }
+
+  // Zoom methods
+  zoomIn() {
+    if (this.currentZoom < 2) {
+      this.currentZoom = Math.min(2, this.currentZoom + 0.1);
+      this.applyZoom();
+    }
+  }
+
+  zoomOut() {
+    if (this.currentZoom > 0.5) {
+      this.currentZoom = Math.max(0.5, this.currentZoom - 0.1);
+      this.applyZoom();
+    }
+  }
+
+  private applyZoom() {
+    this.editorElements.forEach(element => {
+      if (!element?.nativeElement) return;
+      const el = element.nativeElement;
+      el.style.transform = `scale(${this.currentZoom})`;
+      el.style.transformOrigin = 'top left';
+    });
   }
 }
