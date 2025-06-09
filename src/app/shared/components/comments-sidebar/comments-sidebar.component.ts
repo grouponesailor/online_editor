@@ -1,4 +1,5 @@
 import { Component, Input } from '@angular/core';
+import { OnInit, OnChanges } from '@angular/core';
 import { Editor } from '@tiptap/core';
 
 interface Language {
@@ -56,7 +57,7 @@ interface Tab {
   selector: 'app-comments-sidebar',
   templateUrl: './comments-sidebar.component.html'
 })
-export class CommentsSidebarComponent {
+export class CommentsSidebarComponent implements OnInit, OnChanges {
   @Input() editor: Editor | null = null;
   @Input() documentId: string = '';
 
@@ -306,6 +307,16 @@ export class CommentsSidebarComponent {
   ];
 
   newCommentText: string = '';
+
+  constructor() {
+    // Listen for document save events
+    window.addEventListener('documentSaved', (event: any) => {
+      if (event.detail?.documentId === this.documentId) {
+        console.log('Document saved event received, creating version...');
+        this.saveVersion('Document saved');
+      }
+    });
+  }
 
   saveManualVersion() {
     const description = prompt('Enter a description for this version (optional):');
