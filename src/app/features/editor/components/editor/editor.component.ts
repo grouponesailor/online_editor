@@ -330,18 +330,24 @@ export class EditorComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   getNetworkStatusText(): string {
-    const networkInfo = this.networkConfigService.getNetworkInfo();
-    return networkInfo.details;
+    switch (this.networkStatus) {
+      case 'on-premise':
+        return 'On-premise';
+      case 'online':
+        return 'Online';
+      default:
+        return 'Offline';
+    }
   }
 
   getNetworkIcon(): string {
     switch (this.networkStatus) {
       case 'on-premise':
-        return 'fas fa-server text-blue-500';
+        return 'material-icons text-blue-500';
       case 'online':
-        return 'fas fa-cloud text-green-500';
+        return 'material-icons text-green-500';
       default:
-        return 'fas fa-wifi-slash text-red-500';
+        return 'material-icons text-red-500';
     }
   }
 

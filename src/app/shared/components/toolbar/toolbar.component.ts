@@ -323,7 +323,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, OnChanges {
     {
       label: 'Bullet List (Disc)',
       value: 'bullet-disc',
-      icon: 'fas fa-list-ul',
+      icon: 'format_list_bulleted',
       command: (editor: Editor | null) => {
         editor?.chain().focus().toggleBulletList().run();
         this.setListStyle('disc');
@@ -332,7 +332,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, OnChanges {
     {
       label: 'Bullet List (Circle)',
       value: 'bullet-circle',
-      icon: 'far fa-circle',
+      icon: 'radio_button_unchecked',
       command: (editor: Editor | null) => {
         editor?.chain().focus().toggleBulletList().run();
         this.setListStyle('circle');
@@ -341,7 +341,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, OnChanges {
     {
       label: 'Bullet List (Square)',
       value: 'bullet-square',
-      icon: 'fas fa-square',
+      icon: 'check_box_outline_blank',
       command: (editor: Editor | null) => {
         editor?.chain().focus().toggleBulletList().run();
         this.setListStyle('square');
@@ -350,7 +350,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, OnChanges {
     {
       label: 'Numbered List (1, 2, 3)',
       value: 'ordered-decimal',
-      icon: 'fas fa-list-ol',
+      icon: 'format_list_numbered',
       command: (editor: Editor | null) => {
         editor?.chain().focus().toggleOrderedList().run();
         this.setListStyle('decimal');
@@ -359,7 +359,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, OnChanges {
     {
       label: 'Numbered List (a, b, c)',
       value: 'ordered-alpha',
-      icon: 'fas fa-sort-alpha-down',
+      icon: 'sort_by_alpha',
       command: (editor: Editor | null) => {
         editor?.chain().focus().toggleOrderedList().run();
         this.setListStyle('lower-alpha');
@@ -368,7 +368,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, OnChanges {
     {
       label: 'Numbered List (A, B, C)',
       value: 'ordered-alpha-upper',
-      icon: 'fas fa-sort-alpha-up',
+      icon: 'sort_by_alpha',
       command: (editor: Editor | null) => {
         editor?.chain().focus().toggleOrderedList().run();
         this.setListStyle('upper-alpha');
@@ -377,7 +377,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, OnChanges {
     {
       label: 'Numbered List (i, ii, iii)',
       value: 'ordered-roman',
-      icon: 'fas fa-list-ol',
+      icon: 'format_list_numbered',
       command: (editor: Editor | null) => {
         editor?.chain().focus().toggleOrderedList().run();
         this.setListStyle('lower-roman');
@@ -386,7 +386,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, OnChanges {
     {
       label: 'Numbered List (I, II, III)',
       value: 'ordered-roman-upper',
-      icon: 'fas fa-list-ol',
+      icon: 'format_list_numbered',
       command: (editor: Editor | null) => {
         editor?.chain().focus().toggleOrderedList().run();
         this.setListStyle('upper-roman');
@@ -395,15 +395,15 @@ export class ToolbarComponent implements OnInit, OnDestroy, OnChanges {
     {
       label: 'Task List',
       value: 'task',
-      icon: 'fas fa-tasks',
+      icon: 'checklist',
       command: (editor: Editor | null) => editor?.chain().focus().toggleTaskList().run()
     }
   ];
 
   tabs: ToolbarTab[] = [
-    { id: 'file', label: 'File', icon: 'fas fa-file' },
-    { id: 'home', label: 'Home', icon: 'fas fa-home' },
-    { id: 'insert', label: 'Insert', icon: 'fas fa-plus' }
+    { id: 'file', label: 'File', icon: 'description' },
+    { id: 'home', label: 'Home', icon: 'home' },
+    { id: 'insert', label: 'Insert', icon: 'add' }
   ];
 
   readonly shapes: ShapeDefinition[] = [
@@ -455,37 +455,37 @@ export class ToolbarComponent implements OnInit, OnDestroy, OnChanges {
       label: 'Bold',
       command: (editor: Editor | null) => editor?.chain().focus().toggleMark('bold').run(),
       type: 'bold',
-      icon: 'fas fa-bold'
+      icon: 'format_bold'
     },
     {
       label: 'Italic',
       command: (editor: Editor | null) => editor?.chain().focus().toggleMark('italic').run(),
       type: 'italic',
-      icon: 'fas fa-italic'
+      icon: 'format_italic'
     },
     {
       label: 'Underline',
       command: (editor: Editor | null) => editor?.chain().focus().toggleMark('underline').run(),
       type: 'underline',
-      icon: 'fas fa-underline'
+      icon: 'format_underlined'
     },
     {
       label: 'Strike',
       command: (editor: Editor | null) => editor?.chain().focus().toggleMark('strike').run(),
       type: 'strike',
-      icon: 'fas fa-strikethrough'
+      icon: 'strikethrough_s'
     },
     {
       label: 'Subscript',
       command: (editor: Editor | null) => editor?.chain().focus().toggleMark('subscript').run(),
       type: 'subscript',
-      icon: 'fas fa-subscript'
+      icon: 'subscript'
     },
     {
       label: 'Superscript',
       command: (editor: Editor | null) => editor?.chain().focus().toggleMark('superscript').run(),
       type: 'superscript',
-      icon: 'fas fa-superscript'
+      icon: 'superscript'
     }
   ];
 
@@ -494,25 +494,25 @@ export class ToolbarComponent implements OnInit, OnDestroy, OnChanges {
       label: 'Align Left',
       command: (editor: Editor | null) => editor?.chain().focus().setTextAlign('left').run(),
       align: 'left',
-      icon: 'fas fa-align-left'
+      icon: 'format_align_left'
     },
     {
       label: 'Align Center',
       command: (editor: Editor | null) => editor?.chain().focus().setTextAlign('center').run(),
       align: 'center',
-      icon: 'fas fa-align-center'
+      icon: 'format_align_center'
     },
     {
       label: 'Align Right',
       command: (editor: Editor | null) => editor?.chain().focus().setTextAlign('right').run(),
       align: 'right',
-      icon: 'fas fa-align-right'
+      icon: 'format_align_right'
     },
     {
       label: 'Justify',
       command: (editor: Editor | null) => editor?.chain().focus().setTextAlign('justify').run(),
       align: 'justify',
-      icon: 'fas fa-align-justify'
+      icon: 'format_align_justify'
     }
   ];
 

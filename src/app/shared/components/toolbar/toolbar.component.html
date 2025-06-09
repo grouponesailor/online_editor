@@ -3,7 +3,7 @@
   <div class="flex border-b">
     <button
       *ngFor="let tab of tabs"
-      class="px-4 py-2 flex items-center gap-2 text-sm font-medium hover:text-[#6200EE] transition-colors"
+      class="px-4 py-2 flex items-center gap-2 text-[18px] font-medium hover:text-[#6200EE] transition-colors"
       [class.text-blue-600]="currentTab === tab.id"
       [class.border-b-2]="currentTab === tab.id"
       [class.border-blue-600]="currentTab === tab.id"
@@ -99,7 +99,7 @@
         [class.bg-gray-200]="editor?.isActive(item.type)"
         (click)="item.command(editor)"
         [title]="item.label">
-        <i [class]="item.icon"></i>
+        <span class="material-icons-outlined">{{item.icon}}</span>
       </button>
 
       <!-- Text Color -->
@@ -109,8 +109,8 @@
             class="p-2 rounded hover:bg-gray-100 flex items-center gap-1"
             (click)="showTextColorPalette = !showTextColorPalette"
             [title]="'Text Color'">
-            <i class="fas fa-font"></i>
-            <i class="fas fa-chevron-down text-xs"></i>
+            <span class="material-icons-outlined">format_color_text</span>
+            <span class="material-icons-outlined text-xs">arrow_drop_down</span>
           </button>
           <div class="w-4 h-1 mt-1 rounded-sm" [style.background-color]="currentTextColor"></div>
         </div>
@@ -184,8 +184,8 @@
           class="p-2 rounded hover:bg-gray-100 flex items-center"
           (click)="showListMenu = !showListMenu"
           title="List Options">
-          <i class="fas fa-list"></i>
-          <i class="fas fa-chevron-down ml-1 text-xs"></i>
+          <span class="material-icons-outlined">format_list_bulleted</span>
+          <span class="material-icons-outlined text-xs ml-1">arrow_drop_down</span>
         </button>
         <div *ngIf="showListMenu" class="absolute top-full left-0 mt-1 bg-white shadow-lg rounded py-1 z-50 w-64">
           <button
@@ -193,7 +193,7 @@
             class="block w-full px-4 py-2 text-left hover:bg-gray-100 text-sm flex items-center gap-3"
             [class.bg-blue-50]="editor?.isActive(listItem.value.includes('bullet') ? 'bulletList' : listItem.value.includes('ordered') ? 'orderedList' : 'taskList')"
             (click)="listItem.command(editor); showListMenu = false">
-            <i [class]="listItem.icon" class="text-gray-600 w-4"></i>
+            <span class="material-icons-outlined text-gray-600">{{listItem.icon}}</span>
             <span>{{ listItem.label }}</span>
           </button>
         </div>
@@ -205,21 +205,21 @@
         [class.bg-gray-200]="editor?.isActive('bulletList')"
         (click)="toggleBulletList()"
         title="Bullet List">
-        <i class="fas fa-list-ul"></i>
+        <span class="material-icons-outlined">format_list_bulleted</span>
       </button>
       <button
         class="p-2 rounded hover:bg-gray-100"
         [class.bg-gray-200]="editor?.isActive('orderedList')"
         (click)="toggleOrderedList()"
         title="Numbered List">
-        <i class="fas fa-list-ol"></i>
+        <span class="material-icons-outlined">format_list_numbered</span>
       </button>
       <button
         class="p-2 rounded hover:bg-gray-100"
         [class.bg-gray-200]="editor?.isActive('taskList')"
         (click)="toggleTaskList()"
         title="Task List">
-        <i class="fas fa-tasks"></i>
+        <span class="material-icons-outlined">checklist</span>
       </button>
     </div>
 

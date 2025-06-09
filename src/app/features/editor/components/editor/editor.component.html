@@ -3,29 +3,25 @@
   <div class="flex-shrink-0 bg-white border-b px-4 py-2">
     <div class="flex items-center justify-between">
       <div class="flex items-center space-x-4">
-        <input
-          type="text"
-          [(ngModel)]="documentName"
-          (blur)="saveDocumentName()"
-          (keyup.enter)="saveDocumentName()"
-          class="text-lg font-medium bg-transparent border-none focus:outline-none focus:ring-2 focus:ring-[#6200EE] rounded px-2 py-1"
-          placeholder="Document name">
-        
-        <div class="flex items-center text-sm text-gray-600">
-          <i [class]="getNetworkIcon()" class="mr-2"></i>
-          <span>{{ getNetworkStatusText() }}</span>
-          <button 
-            (click)="refreshConnection()" 
-            class="ml-2 text-blue-600 hover:text-[#6200EE] transition-colors"
-            title="Refresh connection">
-            <i class="fas fa-sync-alt"></i>
-          </button>
+        <div class="flex flex-col items-start mr-3">
+          <div class="flex items-center">
+            <img src="assets/logo.png" alt="Logo" width="60" height="60">
+            <span style="font-size:45px; font-weight:600; margin-left:16px;">Stich Editor</span>
+          </div>
+          <input
+            type="text"
+            [(ngModel)]="documentName"
+            (blur)="saveDocumentName()"
+            (keyup.enter)="saveDocumentName()"
+            class="text-lg font-medium bg-transparent border-none focus:outline-none focus:ring-2 focus:ring-[#6200EE] rounded px-2 py-1 mt-2"
+            placeholder="Document name"
+            style="border: 0.5px solid rgba(0,0,0,0.5);">
         </div>
       </div>
       
       <div class="flex items-center space-x-4">
         <div *ngIf="collaborators.length > 0" class="flex items-center text-sm text-gray-600">
-          <i class="fas fa-users mr-2"></i>
+          <span class="material-icons-outlined mr-2">group</span>
           <span>{{ collaborators.length + 1 }} collaborator{{ collaborators.length > 0 ? 's' : '' }}</span>
         </div>
         
@@ -34,7 +30,7 @@
         </div>
         
         <div *ngIf="hasOfflineChanges" class="text-sm text-orange-600">
-          <i class="fas fa-exclamation-triangle mr-1"></i>
+          <span class="material-icons-outlined mr-1">warning</span>
           Offline changes
         </div>
       </div>
@@ -52,50 +48,50 @@
   <div class="flex-1 flex overflow-hidden">
     <!-- Editor Area -->
     <div class="flex-1 editor-container">
+      <!-- Margin Ruler (moved inside editor-container) -->
+      <div class="margin-ruler flex items-center justify-center" style="height: 32px; position: relative; margin-bottom: 16px; background: #F9FAFB; border-bottom: none;">
+        <svg [attr.width]="rulerWidth * 3.78" height="32" [attr.viewBox]="'0 0 ' + (rulerWidth * 3.78) + ' 32'" style="width: 100%; height: 32px;">
+          <!-- Main ruler line -->
+          <line x1="0" y1="24" [attr.x2]="rulerWidth * 3.78" y2="24" stroke="#757575" stroke-width="0.75" />
+          <!-- Major and minor ticks with numbers -->
+          <g font-family="sans-serif" font-size="12" fill="#444" stroke="#757575" font-weight="400">
+            <g *ngFor="let n of [].constructor(12); let i = index">
+              <line [attr.x1]="i * (rulerWidth * 3.78 / 11)" y1="12" [attr.x2]="i * (rulerWidth * 3.78 / 11)" y2="32" stroke="#757575" stroke-width="0.75" />
+              <text *ngIf="i > 0" [attr.x]="i * (rulerWidth * 3.78 / 11) - 8" y="22" text-anchor="middle">{{i}}</text>
+            </g>
+            <g *ngFor="let n of [].constructor(44); let i = index">
+              <ng-container *ngIf="i % 4 !== 0">
+                <line [attr.x1]="i * (rulerWidth * 3.78 / 44)" y1="18" [attr.x2]="i * (rulerWidth * 3.78 / 44)" y2="32" stroke="#757575" stroke-width="0.75" />
+              </ng-container>
+            </g>
+          </g>
+          <!-- Left margin handle -->
+          <rect
+            [attr.x]="leftMarginPx - 3"
+            y="10"
+            width="6"
+            height="18"
+            rx="2"
+            fill="#6200EE"
+            cursor="ew-resize"
+            (mousedown)="startDrag('left', $event)"
+          />
+          <!-- Right margin handle -->
+          <rect
+            [attr.x]="rulerWidth * 3.78 - rightMarginPx - 3"
+            y="10"
+            width="6"
+            height="18"
+            rx="2"
+            fill="#6200EE"
+            cursor="ew-resize"
+            (mousedown)="startDrag('right', $event)"
+          />
+        </svg>
+      </div>
       <!-- Editor Scroll Container -->
       <div class="editor-scroll-container bg-gray-100">
         <div class="pages-container">
-          <!-- Margin Ruler -->
-          <div class="margin-ruler flex items-center justify-center" style="height: 32px; position: relative; margin-bottom: 16px; background: transparent; border-bottom: none;">
-            <svg [attr.width]="rulerWidth * 3.78" height="32" [attr.viewBox]="'0 0 ' + (rulerWidth * 3.78) + ' 32'" style="width: 100%; height: 32px;">
-              <!-- Main ruler line -->
-              <line x1="0" y1="24" [attr.x2]="rulerWidth * 3.78" y2="24" stroke="#bbb" stroke-width="2" />
-              <!-- Major and minor ticks with numbers -->
-              <g font-family="sans-serif" font-size="12" fill="#444" stroke="#888">
-                <g *ngFor="let n of [].constructor(12); let i = index">
-                  <line [attr.x1]="i * (rulerWidth * 3.78 / 11)" y1="12" [attr.x2]="i * (rulerWidth * 3.78 / 11)" y2="32" stroke="#888" stroke-width="1.5" />
-                  <text *ngIf="i > 0" [attr.x]="i * (rulerWidth * 3.78 / 11) - 8" y="22" text-anchor="middle">{{i}}</text>
-                </g>
-                <g *ngFor="let n of [].constructor(44); let i = index">
-                  <ng-container *ngIf="i % 4 !== 0">
-                    <line [attr.x1]="i * (rulerWidth * 3.78 / 44)" y1="18" [attr.x2]="i * (rulerWidth * 3.78 / 44)" y2="32" stroke="#bbb" stroke-width="1" />
-                  </ng-container>
-                </g>
-              </g>
-              <!-- Left margin handle -->
-              <rect
-                [attr.x]="leftMarginPx - 3"
-                y="10"
-                width="6"
-                height="18"
-                rx="2"
-                fill="#6200EE"
-                cursor="ew-resize"
-                (mousedown)="startDrag('left', $event)"
-              />
-              <!-- Right margin handle -->
-              <rect
-                [attr.x]="rulerWidth * 3.78 - rightMarginPx - 3"
-                y="10"
-                width="6"
-                height="18"
-                rx="2"
-                fill="#6200EE"
-                cursor="ew-resize"
-                (mousedown)="startDrag('right', $event)"
-              />
-            </svg>
-          </div>
           <div *ngFor="let page of pages; let i = index" class="a4-page" [ngStyle]="{'padding-left': leftMargin + 'mm', 'padding-right': rightMargin + 'mm'}">
             <div 
               #editorElement
