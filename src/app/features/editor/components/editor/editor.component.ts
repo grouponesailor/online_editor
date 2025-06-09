@@ -13,6 +13,7 @@ import Image from '@tiptap/extension-image';
 import TextAlign from '@tiptap/extension-text-align';
 import Placeholder from '@tiptap/extension-placeholder';
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
+import Link from '@tiptap/extension-link';
 import { common, createLowlight } from 'lowlight'
 import * as Y from 'yjs';
 import { WebsocketProvider } from 'y-websocket';
@@ -26,6 +27,7 @@ import Subscript from '@tiptap/extension-subscript';
 import Superscript from '@tiptap/extension-superscript';
 import Underline from '@tiptap/extension-underline';
 import { Shape } from '../../../../extensions/shape';
+import { Signature } from '../../../../extensions/signature';
 import { NetworkConfigService } from '../../../../core/services/network-config.service';
 import { ShareService } from '../../../../core/services/share.service';
 import { FileService } from '../../../file/services/file.service';
@@ -163,6 +165,15 @@ export class EditorComponent implements OnInit, OnDestroy, AfterViewInit {
   private nameChangeDebouncer = new Subject<string>();
   private resizeObserver: ResizeObserver | null = null;
   private contentChangeSubscription: Subscription | null = null;
+
+  // Flexible margin ruler state
+  leftMargin: number = 15; // mm
+  rightMargin: number = 15; // mm
+  rulerWidth: number = 210; // mm (A4 width)
+  dragging: 'left' | 'right' | null = null;
+
+  get leftMarginPx() { return this.leftMargin * 3.78; } // 1mm ≈ 3.78px
+  get rightMarginPx() { return this.rightMargin * 3.78; }
 
   constructor(
     private route: ActivatedRoute,
@@ -319,18 +330,24 @@ export class EditorComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   getNetworkStatusText(): string {
-    const networkInfo = this.networkConfigService.getNetworkInfo();
-    return networkInfo.details;
+    switch (this.networkStatus) {
+      case 'on-premise':
+        return 'On-premise';
+      case 'online':
+        return 'Online';
+      default:
+        return 'Offline';
+    }
   }
 
   getNetworkIcon(): string {
     switch (this.networkStatus) {
       case 'on-premise':
-        return 'fas fa-server text-blue-500';
+        return 'material-icons text-blue-500';
       case 'online':
-        return 'fas fa-cloud text-green-500';
+        return 'material-icons text-green-500';
       default:
-        return 'fas fa-wifi-slash text-red-500';
+        return 'material-icons text-red-500';
     }
   }
 
@@ -419,6 +436,11 @@ export class EditorComponent implements OnInit, OnDestroy, AfterViewInit {
           levels: [1, 2, 3, 4, 5, 6]
         }
       }),
+      Shape.configure({
+        HTMLAttributes: {
+          class: 'shape-container'
+        }
+      }),
       Table.configure({
         resizable: true,
         HTMLAttributes: {
@@ -471,9 +493,15 @@ export class EditorComponent implements OnInit, OnDestroy, AfterViewInit {
       Underline,
       FontSize,
       LineHeight,
-      Shape.configure({
+      Signature.configure({
         HTMLAttributes: {
-          class: 'shape-node'
+          class: 'signature-block',
+        },
+      }),
+      Link.configure({
+        openOnClick: true,
+        HTMLAttributes: {
+          class: 'text-blue-600 hover:text-blue-800 underline'
         }
       }),
     ];
@@ -493,6 +521,8 @@ export class EditorComponent implements OnInit, OnDestroy, AfterViewInit {
         })
       );
     }
+
+    console.log('Initializing editor with extensions:', extensions);
 
     this.editor = new Editor({
       element: this.editorElement.nativeElement,
@@ -893,4 +923,30 @@ export class EditorComponent implements OnInit, OnDestroy, AfterViewInit {
       el.style.transformOrigin = 'top left';
     });
   }
+
+  startDrag(which: 'left' | 'right', event: MouseEvent) {
+    this.dragging = which;
+    document.addEventListener('mousemove', this.onDrag);
+    document.addEventListener('mouseup', this.stopDrag);
+  }
+
+  onDrag = (event: MouseEvent) => {
+    if (!this.dragging) return;
+    const svg = document.querySelector('.margin-ruler svg');
+    if (!svg) return;
+    const rect = svg.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const mm = x / 3.78;
+    if (this.dragging === 'left') {
+      this.leftMargin = Math.max(5, Math.min(mm, this.rulerWidth - this.rightMargin - 20));
+    } else {
+      this.rightMargin = Math.max(5, Math.min(this.rulerWidth - mm, this.rulerWidth - this.leftMargin - 20));
+    }
+  };
+
+  stopDrag = () => {
+    this.dragging = null;
+    document.removeEventListener('mousemove', this.onDrag);
+    document.removeEventListener('mouseup', this.stopDrag);
+  };
 }

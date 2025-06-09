@@ -3,7 +3,7 @@
   <div class="flex border-b">
     <button
       *ngFor="let tab of tabs"
-      class="px-4 py-2 flex items-center gap-2 text-sm font-medium hover:text-[#6200EE] transition-colors"
+      class="px-4 py-2 flex items-center gap-2 text-[18px] font-medium hover:text-[#6200EE] transition-colors"
       [class.text-blue-600]="currentTab === tab.id"
       [class.border-b-2]="currentTab === tab.id"
       [class.border-blue-600]="currentTab === tab.id"
@@ -21,7 +21,8 @@
       (newDocument)="onNewDocument()"
       (openDocument)="onOpenDocument()"
       (saveDocument)="onSaveDocument()"
-      (exportDocument)="onExportPDF()">
+      (exportDocument)="onExportPDF()"
+      (share)="toggleShareDialog()">
     </app-file-toolbar>
   </div>
 
@@ -42,16 +43,6 @@
         [disabled]="!canRedo()"
         title="Redo">
         <i class="fas fa-redo"></i>
-      </button>
-    </div>
-
-    <!-- Share Button -->
-    <div class="flex gap-1 border-r pr-2">
-      <button
-        class="p-2 rounded hover:bg-gray-100"
-        (click)="toggleShareDialog()"
-        title="Share Document">
-        <i class="fas fa-share-alt"></i>
       </button>
     </div>
 
@@ -108,7 +99,7 @@
         [class.bg-gray-200]="editor?.isActive(item.type)"
         (click)="item.command(editor)"
         [title]="item.label">
-        <i [class]="item.icon"></i>
+        <span class="material-icons-outlined">{{item.icon}}</span>
       </button>
 
       <!-- Text Color -->
@@ -118,8 +109,8 @@
             class="p-2 rounded hover:bg-gray-100 flex items-center gap-1"
             (click)="showTextColorPalette = !showTextColorPalette"
             [title]="'Text Color'">
-            <i class="fas fa-font"></i>
-            <i class="fas fa-chevron-down text-xs"></i>
+            <span class="material-icons-outlined">format_color_text</span>
+            <span class="material-icons-outlined text-xs">arrow_drop_down</span>
           </button>
           <div class="w-4 h-1 mt-1 rounded-sm" [style.background-color]="currentTextColor"></div>
         </div>
@@ -193,8 +184,8 @@
           class="p-2 rounded hover:bg-gray-100 flex items-center"
           (click)="showListMenu = !showListMenu"
           title="List Options">
-          <i class="fas fa-list"></i>
-          <i class="fas fa-chevron-down ml-1 text-xs"></i>
+          <span class="material-icons-outlined">format_list_bulleted</span>
+          <span class="material-icons-outlined text-xs ml-1">arrow_drop_down</span>
         </button>
         <div *ngIf="showListMenu" class="absolute top-full left-0 mt-1 bg-white shadow-lg rounded py-1 z-50 w-64">
           <button
@@ -202,7 +193,7 @@
             class="block w-full px-4 py-2 text-left hover:bg-gray-100 text-sm flex items-center gap-3"
             [class.bg-blue-50]="editor?.isActive(listItem.value.includes('bullet') ? 'bulletList' : listItem.value.includes('ordered') ? 'orderedList' : 'taskList')"
             (click)="listItem.command(editor); showListMenu = false">
-            <i [class]="listItem.icon" class="text-gray-600 w-4"></i>
+            <span class="material-icons-outlined text-gray-600">{{listItem.icon}}</span>
             <span>{{ listItem.label }}</span>
           </button>
         </div>
@@ -214,21 +205,21 @@
         [class.bg-gray-200]="editor?.isActive('bulletList')"
         (click)="toggleBulletList()"
         title="Bullet List">
-        <i class="fas fa-list-ul"></i>
+        <span class="material-icons-outlined">format_list_bulleted</span>
       </button>
       <button
         class="p-2 rounded hover:bg-gray-100"
         [class.bg-gray-200]="editor?.isActive('orderedList')"
         (click)="toggleOrderedList()"
         title="Numbered List">
-        <i class="fas fa-list-ol"></i>
+        <span class="material-icons-outlined">format_list_numbered</span>
       </button>
       <button
         class="p-2 rounded hover:bg-gray-100"
         [class.bg-gray-200]="editor?.isActive('taskList')"
         (click)="toggleTaskList()"
         title="Task List">
-        <i class="fas fa-tasks"></i>
+        <span class="material-icons-outlined">checklist</span>
       </button>
     </div>
 
@@ -274,6 +265,43 @@
       </div>
     </div>
 
+    <!-- Hyperlink -->
+    <div class="flex gap-1 border-r pr-2">
+      <button
+        class="p-2 rounded hover:bg-gray-100 hover:text-[#6200EE] transition-colors flex items-center"
+        (click)="insertLink()"
+        title="Insert Link">
+        <i class="fas fa-link"></i>
+      </button>
+    </div>
+
+    <!-- Signature -->
+    <div class="flex gap-1 border-r pr-2">
+      <div class="relative">
+        <button
+          class="p-2 rounded hover:bg-gray-100 hover:text-[#6200EE] transition-colors flex items-center"
+          (click)="showSignatureMenu = !showSignatureMenu"
+          title="Insert Signature">
+          <i class="fas fa-signature"></i>
+          <i class="fas fa-chevron-down ml-1"></i>
+        </button>
+        <div *ngIf="showSignatureMenu" class="absolute top-full left-0 mt-1 bg-white shadow-lg rounded py-1 z-50 w-64">
+          <div *ngFor="let signature of signatures" class="flex justify-between items-center px-3 py-2 hover:bg-gray-100">
+            <button class="text-sm text-gray-700 hover:text-gray-900" (click)="insertSignature(signature)">
+              <span [innerHTML]="sanitizeHTML(signature)"></span>
+            </button>
+            <button class="text-red-500 hover:text-red-700" (click)="deleteSignature(signature)">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+          <button class="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100" (click)="addCustomSignature()">
+            <i class="fas fa-plus mr-2"></i>
+            Add Custom Signature
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Image -->
     <div class="flex gap-1 border-r pr-2">
       <div class="relative dropdown-container">
@@ -286,35 +314,49 @@
         </button>
         <div *ngIf="showImageMenu" class="absolute top-full left-0 mt-1 bg-white shadow-lg rounded-lg py-2 z-50 w-48">
           <button
-            class="block w-full px-4 py-2 text-left hover:bg-gray-100 hover:text-[#6200EE] transition-colors"
+            class="block w-full px-4 py-2 text-left hover:bg-gray-100 text-sm"
             (click)="uploadImage()">
-            <i class="fas fa-upload mr-2"></i> Upload from computer
+            <i class="fas fa-upload mr-2"></i>Upload from Computer
           </button>
           <button
-            class="block w-full px-4 py-2 text-left hover:bg-gray-100 hover:text-[#6200EE] transition-colors"
+            class="block w-full px-4 py-2 text-left hover:bg-gray-100 text-sm"
             (click)="insertImageByUrl()">
-            <i class="fas fa-link mr-2"></i> By URL
+            <i class="fas fa-link mr-2"></i>Insert from URL
           </button>
           <button
-            class="block w-full px-4 py-2 text-left hover:bg-gray-100 hover:text-[#6200EE] transition-colors"
+            class="block w-full px-4 py-2 text-left hover:bg-gray-100 text-sm"
             (click)="searchImage()">
-            <i class="fas fa-search mr-2"></i> Search the web
+            <i class="fas fa-search mr-2"></i>Search Online
           </button>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- Shapes Tab -->
-  <div *ngIf="currentTab === 'shapes'" class="p-1">
-    <div class="grid grid-cols-8 gap-2">
-      <button
-        *ngFor="let shape of shapes"
-        class="p-2 border rounded hover:bg-gray-100 hover:border-[#6200EE] hover:text-[#6200EE] transition-colors shape-preview"
-        (click)="insertShape(shape)"
-        [title]="shape.name">
-        <div class="w-8 h-8" [innerHTML]="sanitizeHTML(shape.svgPath)"></div>
-      </button>
+    <!-- Diagrams & Charts -->
+    <div class="flex gap-1 border-r pr-2">
+      <div class="relative">
+        <button
+          class="p-2 rounded hover:bg-gray-100 hover:text-[#6200EE] transition-colors flex items-center"
+          (click)="showDiagramsMenu = !showDiagramsMenu"
+          title="Insert Diagram or Chart">
+          <i class="fas fa-project-diagram"></i>
+          <i class="fas fa-chevron-down ml-1"></i>
+        </button>
+        <div *ngIf="showDiagramsMenu" class="absolute top-full left-0 mt-1 bg-white shadow-lg rounded py-1 z-50 w-48">
+          <button class="block w-full px-4 py-2 text-left hover:bg-gray-100 text-sm flex items-center">
+            <i class="fas fa-project-diagram mr-2"></i>Flowchart
+          </button>
+          <button class="block w-full px-4 py-2 text-left hover:bg-gray-100 text-sm flex items-center">
+            <i class="fas fa-chart-pie mr-2"></i>Pie Chart
+          </button>
+          <button class="block w-full px-4 py-2 text-left hover:bg-gray-100 text-sm flex items-center">
+            <i class="fas fa-chart-bar mr-2"></i>Bar Chart
+          </button>
+          <button class="block w-full px-4 py-2 text-left hover:bg-gray-100 text-sm flex items-center">
+            <i class="fas fa-chart-line mr-2"></i>Line Chart
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -470,3 +512,56 @@
   (save)="updateImage($event)"
   (cancel)="showImageEditDialog = false">
 </app-image-edit-dialog>
+
+<!-- Link Dialog -->
+<div *ngIf="showLinkDialog" class="fixed inset-0 bg-black bg-opacity-25 flex items-center justify-center z-50">
+  <div class="bg-white rounded-lg p-4 shadow-xl w-96">
+    <h3 class="text-lg font-semibold mb-4">Insert Link</h3>
+    <div class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">URL</label>
+        <input
+          type="text"
+          [(ngModel)]="linkUrl"
+          placeholder="https://example.com"
+          class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#6200EE] focus:border-transparent">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Text to display</label>
+        <input
+          type="text"
+          [(ngModel)]="linkText"
+          placeholder="Link text"
+          class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#6200EE] focus:border-transparent">
+      </div>
+    </div>
+    <div class="flex justify-between mt-6">
+      <button
+        class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 transition-colors"
+        (click)="showLinkDialog = false">
+        Cancel
+      </button>
+      <div class="flex gap-2">
+        <button
+          *ngIf="editor?.isActive('link')"
+          class="px-4 py-2 text-red-600 hover:bg-red-50 rounded transition-colors"
+          (click)="removeLink()">
+          Remove Link
+        </button>
+        <button
+          class="px-4 py-2 bg-[#6200EE] text-white rounded hover:bg-[#5000CC] transition-colors"
+          (click)="applyLink()">
+          Insert Link
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Share Dialog -->
+<app-share-dialog
+  *ngIf="showShareDialog"
+  [documentId]="documentId"
+  [documentName]="getCurrentDocumentName()"
+  (close)="toggleShareDialog()">
+</app-share-dialog>

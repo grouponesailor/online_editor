@@ -777,4 +777,387 @@
   height: auto;
   margin: 12pt 0;
   display: block;
-} 
+}
+
+/* Shape styles */
+.shape-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 1rem auto;
+  width: 150px;
+  height: 150px;
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.shape-container:hover {
+  border-color: #6200EE;
+  box-shadow: 0 0 0 2px rgba(98, 0, 238, 0.1);
+}
+
+.shape {
+  width: 100px;
+  height: 100px;
+  position: relative;
+  transition: all 0.2s ease;
+  background: rgba(255,0,0,0.1) !important;
+}
+
+/* Rectangle */
+.shape.shape-rectangle {
+  border: 2px solid currentColor;
+}
+
+/* Circle */
+.shape.shape-circle {
+  border: 2px solid currentColor;
+  border-radius: 50%;
+}
+
+/* Triangle */
+.shape.shape-triangle {
+  width: 0;
+  height: 0;
+  border-left: 50px solid transparent;
+  border-right: 50px solid transparent;
+  border-bottom: 86.6px solid currentColor;
+  background: none;
+}
+
+/* Diamond */
+.shape.shape-diamond {
+  transform: rotate(45deg);
+  border: 2px solid currentColor;
+}
+
+/* Hexagon */
+.shape.shape-hexagon {
+  width: 100px;
+  height: 57.735px;
+  background: none;
+  position: relative;
+  border-left: 2px solid currentColor;
+  border-right: 2px solid currentColor;
+}
+
+.shape.shape-hexagon:before,
+.shape.shape-hexagon:after {
+  content: "";
+  position: absolute;
+  width: 70.71px;
+  height: 70.71px;
+  transform: scaleY(0.5774) rotate(-45deg);
+  background: none;
+  left: 13.64px;
+}
+
+.shape.shape-hexagon:before {
+  top: -35.3553px;
+  border-top: 2.8284px solid currentColor;
+  border-right: 2.8284px solid currentColor;
+}
+
+.shape.shape-hexagon:after {
+  bottom: -35.3553px;
+  border-bottom: 2.8284px solid currentColor;
+  border-left: 2.8284px solid currentColor;
+}
+
+/* Star */
+.shape.shape-star {
+  margin: 50px 0;
+  position: relative;
+  display: block;
+  color: currentColor;
+  width: 0px;
+  height: 0px;
+  border-right: 100px solid transparent;
+  border-bottom: 70px solid currentColor;
+  border-left: 100px solid transparent;
+  transform: rotate(35deg);
+}
+
+.shape.shape-star:before {
+  border-bottom: 80px solid currentColor;
+  border-left: 30px solid transparent;
+  border-right: 30px solid transparent;
+  position: absolute;
+  height: 0;
+  width: 0;
+  top: -45px;
+  left: -65px;
+  display: block;
+  content: '';
+  transform: rotate(-35deg);
+}
+
+.shape.shape-star:after {
+  position: absolute;
+  display: block;
+  top: 3px;
+  left: -105px;
+  width: 0px;
+  height: 0px;
+  border-right: 100px solid transparent;
+  border-bottom: 70px solid currentColor;
+  border-left: 100px solid transparent;
+  transform: rotate(-70deg);
+  content: '';
+}
+
+/* Cloud */
+.shape.shape-cloud {
+  background: none;
+  border: none;
+}
+
+.shape.shape-cloud:before {
+  content: '';
+  position: absolute;
+  width: 80px;
+  height: 40px;
+  background: currentColor;
+  border-radius: 20px;
+  top: 30px;
+  left: 10px;
+}
+
+.shape.shape-cloud:after {
+  content: '';
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  background: currentColor;
+  border-radius: 50%;
+  top: 20px;
+  left: 30px;
+}
+
+/* Shape menu icons */
+.shape-menu-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  color: currentColor;
+}
+
+.shape-menu-icon .shape {
+  width: 16px !important;
+  height: 16px !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  position: relative;
+  border-width: 1.5px !important;
+  box-sizing: border-box;
+}
+
+.shape-menu-icon .shape.shape-star,
+.shape-menu-icon .shape.shape-cloud {
+  margin: 0 !important;
+  width: 16px !important;
+  height: 16px !important;
+  border-width: 1.5px !important;
+  box-sizing: border-box;
+}
+
+/* Shape colors */
+.shape-container {
+  color: #4a5568;
+}
+
+.shape-container:hover {
+  color: #6200EE;
+}
+
+/* Ensure shapes are centered in the document */
+.ProseMirror p {
+  margin: 1em 0;
+}
+
+.ProseMirror .shape-container {
+  margin: 1em auto;
+  display: flex;
+}
+
+.signature-block {
+  margin: 1rem 0;
+  padding: 1rem;
+  border-top: 1px solid #e2e8f0;
+  color: #4a5568;
+  font-family: 'Times New Roman', serif;
+  font-size: 1.1em;
+  line-height: 1.5;
+}
+
+/* Help tab styles */
+.help-content {
+  color: #333;
+  line-height: 1.6;
+}
+
+.help-content h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: #2d3748;
+}
+
+.help-content p {
+  margin-bottom: 1rem;
+}
+
+.help-content ul {
+  list-style-type: disc;
+  margin-left: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.help-content li {
+  margin-bottom: 0.5rem;
+}
+
+kbd {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.875rem;
+  border: 1px solid #d1d5db;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+}
+
+/* Link styles */
+.ProseMirror a {
+  cursor: pointer;
+}
+
+.ProseMirror a:hover {
+  text-decoration-thickness: 2px;
+}
+
+.shape-menu-preview {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  box-sizing: border-box;
+  background: none;
+  position: relative;
+  margin: 0;
+  padding: 0;
+}
+.shape-menu-preview.shape-rectangle {
+  border: 1.5px solid currentColor;
+}
+.shape-menu-preview.shape-circle {
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
+}
+.shape-menu-preview.shape-triangle {
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 14px solid currentColor;
+  background: none;
+}
+.shape-menu-preview.shape-diamond {
+  width: 14px;
+  height: 14px;
+  border: 1.5px solid currentColor;
+  transform: rotate(45deg);
+  margin: 1px 0 0 1px;
+}
+.shape-menu-preview.shape-hexagon {
+  width: 16px;
+  height: 9px;
+  background: none;
+  position: relative;
+  border-left: 1.5px solid currentColor;
+  border-right: 1.5px solid currentColor;
+}
+.shape-menu-preview.shape-hexagon:before,
+.shape-menu-preview.shape-hexagon:after {
+  content: '';
+  position: absolute;
+  width: 11.3px;
+  height: 11.3px;
+  transform: scaleY(0.5774) rotate(-45deg);
+  background: none;
+  left: 2.35px;
+}
+.shape-menu-preview.shape-hexagon:before {
+  top: -5.65px;
+  border-top: 1.5px solid currentColor;
+  border-right: 1.5px solid currentColor;
+}
+.shape-menu-preview.shape-hexagon:after {
+  bottom: -5.65px;
+  border-bottom: 1.5px solid currentColor;
+  border-left: 1.5px solid currentColor;
+}
+.shape-menu-preview.shape-star {
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 14px solid currentColor;
+  position: relative;
+}
+.shape-menu-preview.shape-star:before {
+  content: '';
+  position: absolute;
+  top: 4px;
+  left: -8px;
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 14px solid currentColor;
+}
+.shape-menu-preview.shape-cloud {
+  width: 16px;
+  height: 10px;
+  background: none;
+  border-radius: 8px 8px 8px 8px / 6px 6px 10px 10px;
+  border: 1.5px solid currentColor;
+  position: relative;
+}
+.shape-menu-preview.shape-cloud:before {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: -4px;
+  width: 8px;
+  height: 8px;
+  background: currentColor;
+  border-radius: 50%;
+}
+.shape-menu-preview.shape-cloud:after {
+  content: '';
+  position: absolute;
+  right: 2px;
+  top: -4px;
+  width: 8px;
+  height: 8px;
+  background: currentColor;
+  border-radius: 50%;
+}
+
+/* Ensure .shape.shape-<type> styles for document shapes are present and correct */
+.shape.shape-rectangle { border: 2px solid currentColor; }
+.shape.shape-circle { border: 2px solid currentColor; border-radius: 50%; }
+.shape.shape-triangle { width: 0; height: 0; border-left: 50px solid transparent; border-right: 50px solid transparent; border-bottom: 86.6px solid currentColor; background: none; }
+.shape.shape-diamond { transform: rotate(45deg); border: 2px solid currentColor; }
+.shape.shape-hexagon { width: 100px; height: 57.735px; background: none; position: relative; border-left: 2px solid currentColor; border-right: 2px solid currentColor; }
+.shape.shape-hexagon:before, .shape.shape-hexagon:after { content: ""; position: absolute; width: 70.71px; height: 70.71px; transform: scaleY(0.5774) rotate(-45deg); background: none; left: 13.64px; }
+.shape.shape-hexagon:before { top: -35.3553px; border-top: 2.8284px solid currentColor; border-right: 2.8284px solid currentColor; }
+.shape.shape-hexagon:after { bottom: -35.3553px; border-bottom: 2.8284px solid currentColor; border-left: 2.8284px solid currentColor; }
+.shape.shape-star { margin: 50px 0; position: relative; display: block; color: currentColor; width: 0px; height: 0px; border-right: 100px solid transparent; border-bottom: 70px solid currentColor; border-left: 100px solid transparent; transform: rotate(35deg); }
+.shape.shape-star:before { border-bottom: 80px solid currentColor; border-left: 30px solid transparent; border-right: 30px solid transparent; position: absolute; height: 0; width: 0; top: -45px; left: -65px; display: block; content: ''; transform: rotate(-35deg); }
+.shape.shape-star:after { position: absolute; display: block; top: 3px; left: -105px; width: 0px; height: 0px; border-right: 100px solid transparent; border-bottom: 70px solid currentColor; border-left: 100px solid transparent; transform: rotate(-70deg); content: ''; }
+.shape.shape-cloud { background: none; border: none; }
+.shape.shape-cloud:before { content: ''; position: absolute; width: 80px; height: 40px; background: currentColor; border-radius: 20px; top: 30px; left: 10px; }
+.shape.shape-cloud:after { content: ''; position: absolute; width: 40px; height: 40px; background: currentColor; border-radius: 50%; top: 20px; left: 30px; } 

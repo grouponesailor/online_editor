@@ -1,23 +1,23 @@
-<div class="flex flex-wrap gap-1 p-1">
+<div class="flex flex-wrap gap-1 p-1" style="height: 60px; min-height: 60px; max-height: 60px;">
   <!-- New Document with Icon -->
   <div class="flex gap-1 border-r pr-2">
     <button
       class="p-2 rounded hover:bg-gray-100 hover:text-[#6200EE] transition-colors"
       (click)="onNewDocument()"
       title="New Document">
-      <img src="https://cdn4.iconfinder.com/data/icons/wirecons-free-vector-icons/32/add-512.png" alt="New Document" class="w-4 h-4">
+      <img src="https://cdn4.iconfinder.com/data/icons/wirecons-free-vector-icons/32/add-512.png" alt="New Document" style="width:25px;height:25px;">
     </button>
     <button
       class="p-2 rounded hover:bg-gray-100 hover:text-[#6200EE] transition-colors"
       (click)="onOpenDocument()"
       title="Open Document">
-      <i class="fas fa-folder-open"></i>
+      <span class="material-icons-outlined">folder_open</span>
     </button>
     <button
       class="p-2 rounded hover:bg-gray-100 hover:text-[#6200EE] transition-colors"
       (click)="uploadFile()"
       title="Upload File">
-      <i class="fas fa-upload"></i>
+      <span class="material-icons-outlined">upload_file</span>
     </button>
   </div>
 
@@ -27,13 +27,13 @@
       class="p-2 rounded hover:bg-gray-100 hover:text-[#6200EE] transition-colors"
       (click)="saveDocumentLocally()"
       title="Save (Ctrl+S)">
-      <i class="fas fa-save"></i>
+      <span class="material-icons-outlined">save</span>
     </button>
     <button
       class="p-2 rounded hover:bg-gray-100 hover:text-[#6200EE] transition-colors"
       title="Auto Save"
       [class.text-green-600]="true">
-      <i class="fas fa-check-circle"></i>
+      <span class="material-icons-outlined">check_circle</span>
     </button>
   </div>
 
@@ -43,31 +43,31 @@
       class="p-2 rounded hover:bg-gray-100 hover:text-[#6200EE] transition-colors"
       (click)="onExportPDF()"
       title="Export as PDF">
-      <i class="fas fa-file-pdf"></i>
+      <span class="material-icons-outlined">picture_as_pdf</span>
     </button>
     <button
       class="p-2 rounded hover:bg-gray-100 hover:text-[#6200EE] transition-colors"
       (click)="onExportWord()"
       title="Export as Word">
-      <i class="fas fa-file-word"></i>
+      <span class="material-icons-outlined">description</span>
     </button>
     <button
       class="p-2 rounded hover:bg-gray-100 hover:text-[#6200EE] transition-colors"
       (click)="onExportExcel()"
       title="Export to Excel">
-      <img src="https://cdn3.iconfinder.com/data/icons/font-awesome-solid/512/file-excel-512.png" alt="Excel" class="w-4 h-4">
+      <span class="material-icons-outlined">table_chart</span>
     </button>
     <button
       class="p-2 rounded hover:bg-gray-100 hover:text-[#6200EE] transition-colors"
       (click)="onExportPowerPoint()"
       title="Export to PowerPoint">
-      <img src="https://cdn3.iconfinder.com/data/icons/font-awesome-solid/512/file-powerpoint-512.png" alt="PowerPoint" class="w-4 h-4">
+      <span class="material-icons-outlined">slideshow</span>
     </button>
     <button
       class="p-2 rounded hover:bg-gray-100 hover:text-[#6200EE] transition-colors"
       (click)="onPrint()"
       title="Print">
-      <i class="fas fa-print"></i>
+      <span class="material-icons-outlined">print</span>
     </button>
   </div>
 
@@ -77,12 +77,25 @@
       class="p-2 rounded hover:bg-gray-100 hover:text-[#6200EE] transition-colors"
       (click)="openRecentDocuments()"
       title="Recent Documents">
-      <i class="fas fa-history"></i>
+      <span class="material-icons-outlined">history</span>
     </button>
     <button
       class="p-2 rounded hover:bg-gray-100 hover:text-[#6200EE] transition-colors"
       title="File Manager">
-      <i class="fas fa-folder"></i>
+      <span class="material-icons-outlined">folder</span>
+    </button>
+  </div>
+
+  <!-- Share -->
+  <div class="flex gap-1 border-r pr-2">
+    <button
+      (click)="onShare()"
+      class="p-2 rounded hover:bg-gray-100 hover:text-[#6200EE] transition-colors"
+      title="Share Document">
+      <svg width="25" height="25" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M16 22V10M16 10l-6 6M16 10l6 6"/>
+        <rect x="6" y="22" width="20" height="4" rx="2"/>
+      </svg>
     </button>
   </div>
 

@@ -13,6 +13,7 @@ export class FileToolbarComponent {
   @Output() openDocument = new EventEmitter<void>();
   @Output() saveDocument = new EventEmitter<void>();
   @Output() exportDocument = new EventEmitter<string>();
+  @Output() share = new EventEmitter<void>();
 
   constructor(private fileService: FileService) {}
 
@@ -489,5 +490,9 @@ export class FileToolbarComponent {
       }
     };
     input.click();
+  }
+
+  onShare() {
+    this.share.emit();
   }
 }

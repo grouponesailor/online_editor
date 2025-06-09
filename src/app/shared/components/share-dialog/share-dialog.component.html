@@ -8,21 +8,6 @@
     </div>
 
     <div class="p-4">
-      <!-- Document Name -->
-      <div class="mb-6">
-        <div class="flex items-center gap-2 mb-2">
-          <i class="fas fa-file-alt text-gray-500"></i>
-          <h3 class="font-medium">Document Name</h3>
-        </div>
-        <input
-          type="text"
-          [(ngModel)]="documentName"
-          (blur)="updateDocumentName()"
-          placeholder="Enter document name..."
-          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#6200EE] focus:border-transparent"
-        />
-      </div>
-
       <!-- Share Link -->
       <div class="mb-6">
         <div class="flex items-center gap-2 mb-2">
@@ -62,43 +47,6 @@
               <i class="fas fa-check-circle"></i>
               <span>Link copied to clipboard!</span>
             </div>
-            
-            <!-- QR Code Option -->
-            <div class="flex gap-2">
-              <button
-                class="flex-1 px-3 py-2 border border-gray-300 rounded hover:bg-gray-50 hover:border-[#6200EE] transition-colors"
-                (click)="generateQRCode()"
-                [disabled]="!currentShareLink">
-                <i class="fas fa-qrcode mr-2"></i>
-                Generate QR Code
-              </button>
-              <button
-                class="flex-1 px-3 py-2 border border-gray-300 rounded hover:bg-gray-50 hover:border-[#6200EE] transition-colors"
-                (click)="shareViaEmail()"
-                [disabled]="!currentShareLink">
-                <i class="fas fa-envelope mr-2"></i>
-                Share via Email
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Network Status -->
-      <div class="mb-6 p-3 bg-gray-50 rounded-lg">
-        <div class="flex items-center gap-2 mb-2">
-          <i [class]="getNetworkStatusIcon()"></i>
-          <h3 class="font-medium">Network Status</h3>
-        </div>
-        <div class="text-sm text-gray-600">
-          <div *ngIf="networkStatus === 'online'">
-            ✅ Connected to cloud server: <code class="bg-white px-1 rounded">{{serverInfo}}</code>
-          </div>
-          <div *ngIf="networkStatus === 'on-premise'">
-            🏢 Connected to on-premise server: <code class="bg-white px-1 rounded">{{serverInfo}}</code>
-          </div>
-          <div *ngIf="networkStatus === 'offline'">
-            💾 Working offline - Changes will sync when reconnected
           </div>
         </div>
       </div>
@@ -162,52 +110,6 @@
           </div>
           <div *ngIf="sharedUsers.length === 0" class="text-center text-gray-500 py-4">
             No users added yet
-          </div>
-        </div>
-      </div>
-
-      <!-- Advanced Settings -->
-      <div class="border-t pt-4">
-        <div class="flex items-center gap-2 mb-2">
-          <i class="fas fa-cog text-gray-500"></i>
-          <h3 class="font-medium">Advanced Settings</h3>
-        </div>
-        <div class="space-y-2">
-          <label class="flex items-center gap-2">
-            <input
-              type="checkbox"
-              [(ngModel)]="settings.allowEdit"
-              (ngModelChange)="updateSettings()"
-              class="rounded border-gray-300 shadow-sm focus:ring-[#6200EE] text-[#6200EE]"
-            />
-            <span class="text-sm">Allow viewers to download and copy</span>
-          </label>
-          <label class="flex items-center gap-2">
-            <input
-              type="checkbox"
-              [(ngModel)]="settings.allowComment"
-              (ngModelChange)="updateSettings()"
-              class="rounded border-gray-300 shadow-sm focus:ring-[#6200EE] text-[#6200EE]"
-            />
-            <span class="text-sm">Allow viewers to comment</span>
-          </label>
-          <label class="flex items-center gap-2">
-            <input
-              type="checkbox"
-              [(ngModel)]="settings.allowShare"
-              (ngModelChange)="updateSettings()"
-              class="rounded border-gray-300 shadow-sm focus:ring-[#6200EE] text-[#6200EE]"
-            />
-            <span class="text-sm">Allow viewers to share</span>
-          </label>
-          <div class="flex items-center gap-2">
-            <span class="text-sm">Link expires:</span>
-            <input
-              type="date"
-              [(ngModel)]="settings.expirationDate"
-              (ngModelChange)="updateSettings()"
-              class="rounded border-gray-300 shadow-sm text-sm focus:border-[#6200EE] focus:ring-[#6200EE]"
-            />
           </div>
         </div>
       </div>

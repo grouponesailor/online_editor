@@ -1,6 +1,7 @@
 import { Component, Input, OnInit, OnDestroy, OnChanges, SimpleChanges } from '@angular/core';
 import { Editor } from '@tiptap/core';
 import { Shape as ShapeExtension } from '../../../extensions/shape';
+import { Signature as SignatureExtension } from '../../../extensions/signature';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { Subject, takeUntil } from 'rxjs';
 
@@ -37,6 +38,18 @@ interface ShapeDefinition {
   svgPath: string;
 }
 
+interface HelpSection {
+  title: string;
+  icon: string;
+  content: string;
+}
+
+export interface KeyboardShortcut {
+  key: string;
+  description: string;
+  category: string;
+}
+
 @Component({
   selector: 'app-toolbar',
   templateUrl: './toolbar.component.html',
@@ -58,10 +71,16 @@ export class ToolbarComponent implements OnInit, OnDestroy, OnChanges {
   showImageEditDialog = false;
   showHeadingMenu = false;
   showListMenu = false;
+  showShapesMenu = false;
+  showSignatureMenu = false;
+  showDiagramsMenu = false;
   showTextColorPalette = false;
   showHighlightPalette = false;
   formatPainterActive = false;
   selectedImage: any = null;
+  showLinkDialog = false;
+  linkUrl: string = '';
+  linkText: string = '';
 
   // Current selections
   currentFontFamily = 'Arial, sans-serif';
@@ -72,6 +91,94 @@ export class ToolbarComponent implements OnInit, OnDestroy, OnChanges {
   customTextColor = '#000000';
   customHighlightColor = '#FFEB3B';
   tableSelection = { row: 0, col: 0 };
+  signatures: string[] = [
+    'Best regards,<br>Your Name',
+    'Sincerely,<br>Your Name',
+    'Kind regards,<br>Your Name',
+    'Thanks,<br>Your Name'
+  ];
+
+  // Help tab properties
+  selectedHelpSection: string = 'getting-started';
+  
+  helpSections: HelpSection[] = [
+    {
+      title: 'Getting Started',
+      icon: 'fas fa-rocket',
+      content: `
+        <h2>Welcome to the Collaborative Document Editor!</h2>
+        <p>This editor allows you to create and edit documents in real-time with others. Here are some basic features:</p>
+        <ul>
+          <li>Create new documents from the File tab</li>
+          <li>Format text using the Home tab tools</li>
+          <li>Insert tables, images, and more from the Insert tab</li>
+          <li>Share your document using the Share button</li>
+          <li>Collaborate in real-time with others</li>
+        </ul>
+      `
+    },
+    {
+      title: 'Text Formatting',
+      icon: 'fas fa-font',
+      content: `
+        <h2>Text Formatting</h2>
+        <p>You can format your text in various ways:</p>
+        <ul>
+          <li>Change font family and size</li>
+          <li>Apply bold, italic, and underline styles</li>
+          <li>Use headings for document structure</li>
+          <li>Change text color and highlighting</li>
+          <li>Adjust line spacing and alignment</li>
+        </ul>
+      `
+    },
+    {
+      title: 'Insert Features',
+      icon: 'fas fa-plus-square',
+      content: `
+        <h2>Inserting Content</h2>
+        <p>Enhance your documents with various types of content:</p>
+        <ul>
+          <li>Tables with customizable rows and columns</li>
+          <li>Images from your computer or by URL</li>
+          <li>Shapes and diagrams</li>
+          <li>Professional signatures</li>
+          <li>Lists and task lists</li>
+        </ul>
+      `
+    },
+    {
+      title: 'Collaboration',
+      icon: 'fas fa-users',
+      content: `
+        <h2>Real-time Collaboration</h2>
+        <p>Work together with others seamlessly:</p>
+        <ul>
+          <li>Share documents with collaborators</li>
+          <li>See others' cursors and selections</li>
+          <li>Changes sync automatically</li>
+          <li>Works offline with auto-sync</li>
+          <li>Track document history</li>
+        </ul>
+      `
+    }
+  ];
+
+  keyboardShortcuts: KeyboardShortcut[] = [
+    { category: 'General', key: 'Ctrl + S', description: 'Save document' },
+    { category: 'General', key: 'Ctrl + Z', description: 'Undo' },
+    { category: 'General', key: 'Ctrl + Y', description: 'Redo' },
+    { category: 'Formatting', key: 'Ctrl + B', description: 'Bold' },
+    { category: 'Formatting', key: 'Ctrl + I', description: 'Italic' },
+    { category: 'Formatting', key: 'Ctrl + U', description: 'Underline' },
+    { category: 'Formatting', key: 'Ctrl + Alt + 1-6', description: 'Heading 1-6' },
+    { category: 'Formatting', key: 'Ctrl + Alt + 0', description: 'Normal paragraph' },
+    { category: 'Lists', key: 'Ctrl + Shift + 7', description: 'Ordered list' },
+    { category: 'Lists', key: 'Ctrl + Shift + 8', description: 'Bullet list' },
+    { category: 'Lists', key: 'Ctrl + Shift + 9', description: 'Task list' },
+    { category: 'Tables', key: 'Tab', description: 'Next cell' },
+    { category: 'Tables', key: 'Shift + Tab', description: 'Previous cell' }
+  ];
 
   // Color options
   commonColors: string[] = [
@@ -117,6 +224,10 @@ export class ToolbarComponent implements OnInit, OnDestroy, OnChanges {
         this.showTableMenu = false;
         this.showImageMenu = false;
         this.showLineSpacingMenu = false;
+        this.showTextColorPicker = false;
+        this.showHighlightPicker = false;
+        this.showListMenu = false;
+        this.showShapesMenu = false;
       }
     });
   }
@@ -212,7 +323,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, OnChanges {
     {
       label: 'Bullet List (Disc)',
       value: 'bullet-disc',
-      icon: 'fas fa-list-ul',
+      icon: 'format_list_bulleted',
       command: (editor: Editor | null) => {
         editor?.chain().focus().toggleBulletList().run();
         this.setListStyle('disc');
@@ -221,7 +332,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, OnChanges {
     {
       label: 'Bullet List (Circle)',
       value: 'bullet-circle',
-      icon: 'far fa-circle',
+      icon: 'radio_button_unchecked',
       command: (editor: Editor | null) => {
         editor?.chain().focus().toggleBulletList().run();
         this.setListStyle('circle');
@@ -230,7 +341,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, OnChanges {
     {
       label: 'Bullet List (Square)',
       value: 'bullet-square',
-      icon: 'fas fa-square',
+      icon: 'check_box_outline_blank',
       command: (editor: Editor | null) => {
         editor?.chain().focus().toggleBulletList().run();
         this.setListStyle('square');
@@ -239,7 +350,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, OnChanges {
     {
       label: 'Numbered List (1, 2, 3)',
       value: 'ordered-decimal',
-      icon: 'fas fa-list-ol',
+      icon: 'format_list_numbered',
       command: (editor: Editor | null) => {
         editor?.chain().focus().toggleOrderedList().run();
         this.setListStyle('decimal');
@@ -248,7 +359,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, OnChanges {
     {
       label: 'Numbered List (a, b, c)',
       value: 'ordered-alpha',
-      icon: 'fas fa-sort-alpha-down',
+      icon: 'sort_by_alpha',
       command: (editor: Editor | null) => {
         editor?.chain().focus().toggleOrderedList().run();
         this.setListStyle('lower-alpha');
@@ -257,7 +368,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, OnChanges {
     {
       label: 'Numbered List (A, B, C)',
       value: 'ordered-alpha-upper',
-      icon: 'fas fa-sort-alpha-up',
+      icon: 'sort_by_alpha',
       command: (editor: Editor | null) => {
         editor?.chain().focus().toggleOrderedList().run();
         this.setListStyle('upper-alpha');
@@ -266,7 +377,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, OnChanges {
     {
       label: 'Numbered List (i, ii, iii)',
       value: 'ordered-roman',
-      icon: 'fas fa-list-ol',
+      icon: 'format_list_numbered',
       command: (editor: Editor | null) => {
         editor?.chain().focus().toggleOrderedList().run();
         this.setListStyle('lower-roman');
@@ -275,7 +386,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, OnChanges {
     {
       label: 'Numbered List (I, II, III)',
       value: 'ordered-roman-upper',
-      icon: 'fas fa-list-ol',
+      icon: 'format_list_numbered',
       command: (editor: Editor | null) => {
         editor?.chain().focus().toggleOrderedList().run();
         this.setListStyle('upper-roman');
@@ -284,60 +395,52 @@ export class ToolbarComponent implements OnInit, OnDestroy, OnChanges {
     {
       label: 'Task List',
       value: 'task',
-      icon: 'fas fa-tasks',
+      icon: 'checklist',
       command: (editor: Editor | null) => editor?.chain().focus().toggleTaskList().run()
     }
   ];
 
   tabs: ToolbarTab[] = [
-    { id: 'file', label: 'File', icon: 'fas fa-file' },
-    { id: 'home', label: 'Home', icon: 'fas fa-home' },
-    { id: 'insert', label: 'Insert', icon: 'fas fa-plus' },
-    { id: 'shapes', label: 'Shapes', icon: 'fas fa-shapes' },
-    { id: 'format', label: 'Format', icon: 'fas fa-palette' },
-    { id: 'view', label: 'View', icon: 'fas fa-eye' }
+    { id: 'file', label: 'File', icon: 'description' },
+    { id: 'home', label: 'Home', icon: 'home' },
+    { id: 'insert', label: 'Insert', icon: 'add' }
   ];
 
-  shapes: ShapeDefinition[] = [
+  readonly shapes: ShapeDefinition[] = [
     {
       id: 'rectangle',
       name: 'Rectangle',
-      svgPath: `<svg viewBox="0 0 32 32"><rect x="4" y="4" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" rx="2"/></svg>`
+      svgPath: 'shape-rectangle'
     },
     {
       id: 'circle',
       name: 'Circle',
-      svgPath: `<svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="12" fill="none" stroke="currentColor" stroke-width="2"/></svg>`
+      svgPath: 'shape-circle'
     },
     {
       id: 'triangle',
       name: 'Triangle',
-      svgPath: `<svg viewBox="0 0 32 32"><path d="M16 4 L28 28 L4 28 Z" fill="none" stroke="currentColor" stroke-width="2"/></svg>`
-    },
-    {
-      id: 'arrow',
-      name: 'Arrow',
-      svgPath: `<svg viewBox="0 0 32 32"><path d="M4 16 L24 16 M18 8 L24 16 L18 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+      svgPath: 'shape-triangle'
     },
     {
       id: 'star',
       name: 'Star',
-      svgPath: `<svg viewBox="0 0 32 32"><path d="M16 4 L19 13 L28 13 L21 19 L24 28 L16 23 L8 28 L11 19 L4 13 L13 13 Z" fill="none" stroke="currentColor" stroke-width="2"/></svg>`
+      svgPath: 'shape-star'
     },
     {
       id: 'hexagon',
       name: 'Hexagon',
-      svgPath: `<svg viewBox="0 0 32 32"><path d="M16 4 L26 10 L26 22 L16 28 L6 22 L6 10 Z" fill="none" stroke="currentColor" stroke-width="2"/></svg>`
+      svgPath: 'shape-hexagon'
     },
     {
       id: 'diamond',
       name: 'Diamond',
-      svgPath: `<svg viewBox="0 0 32 32"><path d="M16 4 L28 16 L16 28 L4 16 Z" fill="none" stroke="currentColor" stroke-width="2"/></svg>`
+      svgPath: 'shape-diamond'
     },
     {
       id: 'cloud',
       name: 'Cloud',
-      svgPath: `<svg viewBox="0 0 32 32"><path d="M8 16 C8 12 10 8 16 8 C22 8 24 12 24 16 C28 16 28 20 28 20 C28 24 24 24 24 24 L12 24 C12 24 4 24 4 20 C4 16 8 16 8 16 Z" fill="none" stroke="currentColor" stroke-width="2"/></svg>`
+      svgPath: 'shape-cloud'
     }
   ];
 
@@ -352,37 +455,37 @@ export class ToolbarComponent implements OnInit, OnDestroy, OnChanges {
       label: 'Bold',
       command: (editor: Editor | null) => editor?.chain().focus().toggleMark('bold').run(),
       type: 'bold',
-      icon: 'fas fa-bold'
+      icon: 'format_bold'
     },
     {
       label: 'Italic',
       command: (editor: Editor | null) => editor?.chain().focus().toggleMark('italic').run(),
       type: 'italic',
-      icon: 'fas fa-italic'
+      icon: 'format_italic'
     },
     {
       label: 'Underline',
       command: (editor: Editor | null) => editor?.chain().focus().toggleMark('underline').run(),
       type: 'underline',
-      icon: 'fas fa-underline'
+      icon: 'format_underlined'
     },
     {
       label: 'Strike',
       command: (editor: Editor | null) => editor?.chain().focus().toggleMark('strike').run(),
       type: 'strike',
-      icon: 'fas fa-strikethrough'
+      icon: 'strikethrough_s'
     },
     {
       label: 'Subscript',
       command: (editor: Editor | null) => editor?.chain().focus().toggleMark('subscript').run(),
       type: 'subscript',
-      icon: 'fas fa-subscript'
+      icon: 'subscript'
     },
     {
       label: 'Superscript',
       command: (editor: Editor | null) => editor?.chain().focus().toggleMark('superscript').run(),
       type: 'superscript',
-      icon: 'fas fa-superscript'
+      icon: 'superscript'
     }
   ];
 
@@ -391,25 +494,25 @@ export class ToolbarComponent implements OnInit, OnDestroy, OnChanges {
       label: 'Align Left',
       command: (editor: Editor | null) => editor?.chain().focus().setTextAlign('left').run(),
       align: 'left',
-      icon: 'fas fa-align-left'
+      icon: 'format_align_left'
     },
     {
       label: 'Align Center',
       command: (editor: Editor | null) => editor?.chain().focus().setTextAlign('center').run(),
       align: 'center',
-      icon: 'fas fa-align-center'
+      icon: 'format_align_center'
     },
     {
       label: 'Align Right',
       command: (editor: Editor | null) => editor?.chain().focus().setTextAlign('right').run(),
       align: 'right',
-      icon: 'fas fa-align-right'
+      icon: 'format_align_right'
     },
     {
       label: 'Justify',
       command: (editor: Editor | null) => editor?.chain().focus().setTextAlign('justify').run(),
       align: 'justify',
-      icon: 'fas fa-align-justify'
+      icon: 'format_align_justify'
     }
   ];
 
@@ -652,10 +755,18 @@ export class ToolbarComponent implements OnInit, OnDestroy, OnChanges {
   insertShape(shape: ShapeDefinition) {
     if (!this.editor) return;
 
-    this.editor.chain()
-      .focus()
-      .insertContent(`<div class="shape-node" data-type="${shape.id}">${shape.svgPath}</div>`)
-      .run();
+    try {
+      this.editor.chain()
+        .focus()
+        .setShape({
+          type: shape.id,
+          svgPath: shape.svgPath
+        })
+        .run();
+      this.showShapesMenu = false;
+    } catch (error) {
+      console.error('Error inserting shape:', error);
+    }
   }
 
   zoomIn() {
@@ -774,6 +885,80 @@ export class ToolbarComponent implements OnInit, OnDestroy, OnChanges {
   toggleTaskList() {
     if (this.editor) {
       this.editor.chain().focus().toggleTaskList().run();
+    }
+  }
+
+  insertSignature(signature: string) {
+    if (this.editor) {
+      this.editor.chain().focus().insertSignature(signature).run();
+      this.showSignatureMenu = false;
+    }
+  }
+
+  addCustomSignature() {
+    const customSignature = prompt('Enter your custom signature:');
+    if (customSignature) {
+      this.signatures.push(customSignature);
+      this.insertSignature(customSignature);
+    }
+  }
+
+  insertLink() {
+    if (this.editor) {
+      const { from, to } = this.editor.state.selection;
+      const selectedText = this.editor.state.doc.textBetween(from, to, ' ');
+      this.linkText = selectedText;
+      this.showLinkDialog = true;
+    }
+  }
+
+  applyLink() {
+    if (this.editor && this.linkUrl) {
+      if (this.linkText) {
+        // If we have text, insert both text and link
+        this.editor
+          .chain()
+          .focus()
+          .insertContent({
+            type: 'text',
+            text: this.linkText,
+            marks: [
+              {
+                type: 'link',
+                attrs: {
+                  href: this.linkUrl,
+                  target: '_blank'
+                }
+              }
+            ]
+          })
+          .run();
+      } else {
+        // If no text, just set the link on the selection
+        this.editor
+          .chain()
+          .focus()
+          .setLink({ href: this.linkUrl, target: '_blank' })
+          .run();
+      }
+      
+      // Reset and close dialog
+      this.linkUrl = '';
+      this.linkText = '';
+      this.showLinkDialog = false;
+    }
+  }
+
+  removeLink() {
+    if (this.editor) {
+      this.editor.chain().focus().unsetLink().run();
+    }
+  }
+
+  deleteSignature(signature: string) {
+    const index = this.signatures.indexOf(signature);
+    if (index !== -1) {
+      this.signatures.splice(index, 1);
     }
   }
 }

@@ -7,14 +7,14 @@ export interface ShapeOptions {
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
     shape: {
-      setShape: (options: { type: string; svg: string }) => ReturnType;
+      setShape: (options: { type: string; svgPath: string }) => ReturnType;
     };
   }
 }
 
 export interface ShapeAttributes {
   type: string;
-  svg: string;
+  svgPath: string;
 }
 
 export const Shape = Node.create<ShapeOptions>({
@@ -28,7 +28,7 @@ export const Shape = Node.create<ShapeOptions>({
 
   group: 'block',
 
-  atom: true,
+  inline: false,
 
   draggable: true,
 
@@ -36,15 +36,22 @@ export const Shape = Node.create<ShapeOptions>({
     return {
       type: {
         default: null,
-      },
-      svg: {
-        default: null,
-        parseHTML: (element) => element.getAttribute('data-svg'),
-        renderHTML: (attributes: Record<string, any>) => {
-          if (!attributes['svg']) {
+        parseHTML: element => element.getAttribute('data-shape-type'),
+        renderHTML: attributes => {
+          if (!attributes['type']) {
             return {};
           }
-          return { 'data-svg': attributes['svg'] };
+          return { 'data-shape-type': attributes['type'] };
+        },
+      },
+      svgPath: {
+        default: null,
+        parseHTML: element => element.getAttribute('data-shape-class'),
+        renderHTML: attributes => {
+          if (!attributes['svgPath']) {
+            return {};
+          }
+          return { 'data-shape-class': attributes['svgPath'] };
         },
       },
     };
@@ -53,33 +60,44 @@ export const Shape = Node.create<ShapeOptions>({
   parseHTML() {
     return [
       {
-        tag: 'div[data-type="shape"]',
+        tag: 'div[data-shape-type]',
       },
     ];
   },
 
   renderHTML({ HTMLAttributes }) {
-    const attrs = mergeAttributes(
-      this.options.HTMLAttributes,
-      HTMLAttributes,
-      { 'data-type': 'shape', class: 'shape-container' }
-    );
-
-    return ['div', attrs, ['div', { 
-      class: 'shape',
-      innerHTML: HTMLAttributes['svg'] || ''
-    }]];
+    const shapeClass = HTMLAttributes['svgPath'] || '';
+    
+    return [
+      'div',
+      mergeAttributes(this.options.HTMLAttributes, {
+        'data-shape-type': HTMLAttributes['type'],
+        'data-shape-class': shapeClass,
+        class: 'shape-container',
+      }),
+      ['div', { class: `shape ${shapeClass}` }]
+    ];
   },
 
   addCommands() {
     return {
       setShape:
         (options: ShapeAttributes) =>
-        ({ commands }) => {
-          return commands.insertContent({
-            type: this.name,
-            attrs: options,
-          });
+        ({ chain, editor }) => {
+          const insertShape = chain()
+            .insertContent({
+              type: this.name,
+              attrs: {
+                type: options.type,
+                svgPath: options.svgPath,
+              },
+            });
+
+          if (editor.state.selection.anchor === editor.state.doc.content.size) {
+            return insertShape.insertContent({ type: 'paragraph' }).run();
+          }
+
+          return insertShape.run();
         },
     };
   },
