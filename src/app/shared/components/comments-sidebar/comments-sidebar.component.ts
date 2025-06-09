@@ -1,5 +1,6 @@
 import { Component, Input } from '@angular/core';
 import { Editor } from '@tiptap/core';
+import { AiService } from '../../services/ai.service';
 
 interface Comment {
   id: string;
@@ -56,6 +57,8 @@ export class CommentsSidebarComponent {
   // AI functionality properties - explicitly declared
   isSummarizing: boolean = false;
   aiSummary: string | null = null;
+
+  constructor(private aiService: AiService) {}
 
   tabs: Tab[] = [
     { id: 'comments', label: 'Comments', icon: 'fas fa-comments' },
@@ -332,16 +335,25 @@ export class CommentsSidebarComponent {
         return;
       }
 
-      // Simulate AI processing delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      // Generate a mock AI summary based on document content
-      this.aiSummary = this.generateMockSummary(documentText);
+      console.log('🚀 Starting document summarization...');
+      
+      // Use the AI service to get real summary from Hugging Face
+      this.aiService.summarizeText(documentText).subscribe({
+        next: (summary: string) => {
+          console.log('✅ Summarization completed successfully');
+          this.aiSummary = summary;
+          this.isSummarizing = false;
+        },
+        error: (error: any) => {
+          console.error('❌ Summarization failed:', error);
+          this.aiSummary = 'Sorry, there was an error generating the summary. Please try again later.';
+          this.isSummarizing = false;
+        }
+      });
       
     } catch (error) {
       console.error('Error generating summary:', error);
       this.aiSummary = 'Sorry, there was an error generating the summary. Please try again later.';
-    } finally {
       this.isSummarizing = false;
     }
   }
