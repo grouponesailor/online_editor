@@ -6,6 +6,9 @@ const path = require('path');
 const { networkInterfaces } = require('os');
 const net = require('net');
 
+// Declare server variable at module scope
+let server;
+
 // Get local IP address
 function getLocalIP() {
   const nets = networkInterfaces();
@@ -259,7 +262,7 @@ async function startServer() {
   try {
     const PORT = await findAvailablePort(process.env.PORT || 1234);
     
-    const server = app.listen(PORT, '0.0.0.0', async () => {
+    server = app.listen(PORT, '0.0.0.0', async () => {
       await loadPersistedData();
       console.log(`🚀 Collaborative Document Server running on:`);
       console.log(`   Local:    http://localhost:${PORT}`);
