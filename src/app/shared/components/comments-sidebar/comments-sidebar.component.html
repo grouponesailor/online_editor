@@ -1,72 +1,219 @@
-<div class="h-full bg-white border-l">
-  <div class="p-4 border-b">
-    <h2 class="text-lg font-semibold">Comments</h2>
+<div class="h-full bg-white border-l flex flex-col">
+  <!-- Tab Navigation -->
+  <div class="flex border-b bg-gray-50">
+    <button
+      *ngFor="let tab of tabs"
+      class="flex-1 px-4 py-3 text-sm font-medium transition-colors"
+      [class.bg-white]="activeTab === tab.id"
+      [class.text-[#6200EE]]="activeTab === tab.id"
+      [class.border-b-2]="activeTab === tab.id"
+      [class.border-[#6200EE]]="activeTab === tab.id"
+      [class.text-gray-600]="activeTab !== tab.id"
+      [class.hover:text-gray-800]="activeTab !== tab.id"
+      (click)="setActiveTab(tab.id)">
+      <i [class]="tab.icon" class="mr-2"></i>
+      {{ tab.label }}
+    </button>
   </div>
 
-  <!-- Comments List -->
-  <div class="p-4 space-y-4">
-    <div *ngIf="comments.length === 0" class="text-center text-gray-500">
-      No comments yet
-    </div>
+  <!-- Tab Content -->
+  <div class="flex-1 overflow-hidden">
+    <!-- Comments Tab -->
+    <div *ngIf="activeTab === 'comments'" class="h-full flex flex-col">
+      <div class="p-4 border-b">
+        <h2 class="text-lg font-semibold">Comments</h2>
+      </div>
 
-    <div *ngFor="let comment of comments" class="space-y-2">
-      <!-- Comment -->
-      <div class="bg-gray-50 rounded-lg p-3">
-        <div class="flex items-center gap-2 mb-2">
-          <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
-            <img *ngIf="comment.author.avatar" [src]="comment.author.avatar" [alt]="comment.author.name" class="w-8 h-8 rounded-full">
-            <i *ngIf="!comment.author.avatar" class="fas fa-user text-gray-400"></i>
-          </div>
-          <div>
-            <div class="font-medium">{{ comment.author.name }}</div>
-            <div class="text-sm text-gray-500">{{ comment.createdAt | date:'short' }}</div>
-          </div>
+      <!-- Comments List -->
+      <div class="flex-1 overflow-y-auto p-4 space-y-4">
+        <div *ngIf="comments.length === 0" class="text-center text-gray-500 py-8">
+          <i class="fas fa-comments text-3xl mb-2"></i>
+          <p>No comments yet</p>
+          <p class="text-sm">Start a conversation about this document</p>
         </div>
-        <p class="text-gray-700">{{ comment.text }}</p>
-        <div class="mt-2 flex items-center gap-4 text-sm">
-          <button class="text-gray-500 hover:text-gray-700" (click)="replyToComment(comment)">
-            <i class="fas fa-reply mr-1"></i> Reply
-          </button>
-          <button class="text-gray-500 hover:text-gray-700" (click)="resolveComment(comment)">
-            <i class="fas fa-check mr-1"></i> Resolve
-          </button>
+
+        <div *ngFor="let comment of comments" class="space-y-2">
+          <!-- Comment -->
+          <div class="bg-gray-50 rounded-lg p-3">
+            <div class="flex items-center gap-2 mb-2">
+              <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
+                <img *ngIf="comment.author.avatar" [src]="comment.author.avatar" [alt]="comment.author.name" class="w-8 h-8 rounded-full">
+                <i *ngIf="!comment.author.avatar" class="fas fa-user text-gray-400"></i>
+              </div>
+              <div>
+                <div class="font-medium">{{ comment.author.name }}</div>
+                <div class="text-sm text-gray-500">{{ comment.createdAt | date:'short' }}</div>
+              </div>
+            </div>
+            <p class="text-gray-700">{{ comment.text }}</p>
+            <div class="mt-2 flex items-center gap-4 text-sm">
+              <button class="text-gray-500 hover:text-[#6200EE] transition-colors" (click)="replyToComment(comment)">
+                <i class="fas fa-reply mr-1"></i> Reply
+              </button>
+              <button class="text-gray-500 hover:text-[#6200EE] transition-colors" (click)="resolveComment(comment)">
+                <i class="fas fa-check mr-1"></i> Resolve
+              </button>
+            </div>
+          </div>
+
+          <!-- Replies -->
+          <div *ngIf="comment.replies && comment.replies.length > 0" class="ml-8 space-y-2">
+            <div *ngFor="let reply of comment.replies" class="bg-gray-50 rounded-lg p-3">
+              <div class="flex items-center gap-2 mb-2">
+                <div class="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center">
+                  <img *ngIf="reply.author.avatar" [src]="reply.author.avatar" [alt]="reply.author.name" class="w-6 h-6 rounded-full">
+                  <i *ngIf="!reply.author.avatar" class="fas fa-user text-gray-400"></i>
+                </div>
+                <div>
+                  <div class="font-medium">{{ reply.author.name }}</div>
+                  <div class="text-sm text-gray-500">{{ reply.createdAt | date:'short' }}</div>
+                </div>
+              </div>
+              <p class="text-gray-700">{{ reply.text }}</p>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- Replies -->
-      <div *ngIf="comment.replies && comment.replies.length > 0" class="ml-8 space-y-2">
-        <div *ngFor="let reply of comment.replies" class="bg-gray-50 rounded-lg p-3">
-          <div class="flex items-center gap-2 mb-2">
-            <div class="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center">
-              <img *ngIf="reply.author.avatar" [src]="reply.author.avatar" [alt]="reply.author.name" class="w-6 h-6 rounded-full">
-              <i *ngIf="!reply.author.avatar" class="fas fa-user text-gray-400"></i>
+      <!-- Add Comment -->
+      <div class="p-4 border-t bg-white">
+        <textarea
+          [(ngModel)]="newCommentText"
+          placeholder="Add a comment..."
+          class="w-full rounded-lg border-gray-300 shadow-sm focus:border-[#6200EE] focus:ring-1 focus:ring-[#6200EE]"
+          rows="3">
+        </textarea>
+        <div class="mt-2 flex justify-end">
+          <button
+            class="px-4 py-2 bg-[#6200EE] text-white rounded hover:bg-[#5000CC] transition-colors"
+            [disabled]="!newCommentText.trim()"
+            (click)="addComment()">
+            Comment
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- History Tab -->
+    <div *ngIf="activeTab === 'history'" class="h-full flex flex-col">
+      <div class="p-4 border-b">
+        <h2 class="text-lg font-semibold">Version History</h2>
+      </div>
+
+      <!-- History List -->
+      <div class="flex-1 overflow-y-auto p-4 space-y-3">
+        <div *ngIf="versionHistory.length === 0" class="text-center text-gray-500 py-8">
+          <i class="fas fa-history text-3xl mb-2"></i>
+          <p>No version history</p>
+          <p class="text-sm">Changes will appear here as you edit</p>
+        </div>
+
+        <div *ngFor="let version of versionHistory; let i = index" class="border rounded-lg p-3 hover:bg-gray-50 transition-colors">
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-2">
+              <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                <i class="fas fa-user text-blue-600 text-sm"></i>
+              </div>
+              <div>
+                <div class="font-medium text-sm">{{ version.author }}</div>
+                <div class="text-xs text-gray-500">{{ version.timestamp | date:'short' }}</div>
+              </div>
             </div>
-            <div>
-              <div class="font-medium">{{ reply.author.name }}</div>
-              <div class="text-sm text-gray-500">{{ reply.createdAt | date:'short' }}</div>
+            <span class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">v{{ version.version }}</span>
+          </div>
+          <p class="text-sm text-gray-700 mb-2">{{ version.description }}</p>
+          <div class="flex gap-2">
+            <button class="text-xs text-[#6200EE] hover:text-[#5000CC] transition-colors" (click)="viewVersion(version)">
+              <i class="fas fa-eye mr-1"></i> View
+            </button>
+            <button *ngIf="i > 0" class="text-xs text-[#6200EE] hover:text-[#5000CC] transition-colors" (click)="restoreVersion(version)">
+              <i class="fas fa-undo mr-1"></i> Restore
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Collaborators Tab -->
+    <div *ngIf="activeTab === 'collaborators'" class="h-full flex flex-col">
+      <div class="p-4 border-b">
+        <h2 class="text-lg font-semibold">Collaborators</h2>
+      </div>
+
+      <!-- Active Collaborators -->
+      <div class="p-4 border-b">
+        <h3 class="text-sm font-medium text-gray-700 mb-3">Currently Active</h3>
+        <div *ngIf="activeCollaborators.length === 0" class="text-center text-gray-500 py-4">
+          <i class="fas fa-user-friends text-2xl mb-2"></i>
+          <p class="text-sm">No active collaborators</p>
+        </div>
+        <div *ngFor="let collaborator of activeCollaborators" class="flex items-center gap-3 mb-3">
+          <div class="relative">
+            <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+              <img *ngIf="collaborator.avatar" [src]="collaborator.avatar" [alt]="collaborator.name" class="w-10 h-10 rounded-full">
+              <i *ngIf="!collaborator.avatar" class="fas fa-user text-gray-400"></i>
+            </div>
+            <div class="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full"></div>
+          </div>
+          <div class="flex-1">
+            <div class="font-medium text-sm">{{ collaborator.name }}</div>
+            <div class="text-xs text-gray-500">{{ collaborator.status }}</div>
+          </div>
+          <div class="w-3 h-3 rounded-full" [style.background-color]="collaborator.cursorColor"></div>
+        </div>
+      </div>
+
+      <!-- All Collaborators -->
+      <div class="flex-1 overflow-y-auto p-4">
+        <h3 class="text-sm font-medium text-gray-700 mb-3">All Collaborators</h3>
+        <div *ngFor="let collaborator of allCollaborators" class="flex items-center gap-3 mb-3">
+          <div class="relative">
+            <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
+              <img *ngIf="collaborator.avatar" [src]="collaborator.avatar" [alt]="collaborator.name" class="w-8 h-8 rounded-full">
+              <i *ngIf="!collaborator.avatar" class="fas fa-user text-gray-400"></i>
+            </div>
+            <div *ngIf="collaborator.isOnline" class="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+          </div>
+          <div class="flex-1">
+            <div class="font-medium text-sm">{{ collaborator.name }}</div>
+            <div class="text-xs text-gray-500">{{ collaborator.role }} • {{ collaborator.lastSeen | date:'short' }}</div>
+          </div>
+          <div class="relative">
+            <button class="text-gray-400 hover:text-gray-600 transition-colors" (click)="toggleCollaboratorMenu(collaborator.id)">
+              <i class="fas fa-ellipsis-v"></i>
+            </button>
+            <div *ngIf="showCollaboratorMenu === collaborator.id" class="absolute right-0 top-6 bg-white shadow-lg rounded border py-1 z-10 w-32">
+              <button class="block w-full px-3 py-1 text-left text-sm hover:bg-gray-100 transition-colors" (click)="changeRole(collaborator)">
+                Change Role
+              </button>
+              <button class="block w-full px-3 py-1 text-left text-sm hover:bg-gray-100 transition-colors" (click)="sendMessage(collaborator)">
+                Send Message
+              </button>
+              <button class="block w-full px-3 py-1 text-left text-sm text-red-600 hover:bg-red-50 transition-colors" (click)="removeCollaborator(collaborator)">
+                Remove
+              </button>
             </div>
           </div>
-          <p class="text-gray-700">{{ reply.text }}</p>
+        </div>
+      </div>
+
+      <!-- Add Collaborator -->
+      <div class="p-4 border-t bg-white">
+        <div class="flex gap-2">
+          <input
+            type="email"
+            [(ngModel)]="newCollaboratorEmail"
+            placeholder="Enter email address..."
+            class="flex-1 rounded border-gray-300 shadow-sm focus:border-[#6200EE] focus:ring-1 focus:ring-[#6200EE] text-sm"
+          />
+          <button
+            class="px-3 py-2 bg-[#6200EE] text-white rounded hover:bg-[#5000CC] transition-colors text-sm"
+            [disabled]="!isValidEmail(newCollaboratorEmail)"
+            (click)="addCollaborator()">
+            <i class="fas fa-plus"></i>
+          </button>
         </div>
       </div>
     </div>
   </div>
-
-  <!-- Add Comment -->
-  <div class="p-4 border-t">
-    <textarea
-      [(ngModel)]="newCommentText"
-      placeholder="Add a comment..."
-      class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-      rows="3">
-    </textarea>
-    <div class="mt-2 flex justify-end">
-      <button
-        class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-        [disabled]="!newCommentText.trim()"
-        (click)="addComment()">
-        Comment
-      </button>
-    </div>
-  </div>
-</div> 
+</div>
