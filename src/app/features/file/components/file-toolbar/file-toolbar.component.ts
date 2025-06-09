@@ -84,10 +84,14 @@ export class FileToolbarComponent {
   private triggerVersionSave() {
     // Emit a custom event that the editor component can listen to
     if (this.documentId) {
+      console.log('Triggering version save for document:', this.documentId);
+      
       const event = new CustomEvent('documentSaved', {
         detail: { documentId: this.documentId, timestamp: new Date() }
       });
       window.dispatchEvent(event);
+      
+      console.log('Document saved event dispatched');
     }
   }
 

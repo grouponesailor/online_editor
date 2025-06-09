@@ -307,6 +307,46 @@ export class CommentsSidebarComponent {
 
   newCommentText: string = '';
 
+  ngOnInit() {
+    console.log('Comments sidebar initialized with documentId:', this.documentId);
+    
+    // Load version history when component initializes
+    if (this.documentId) {
+      this.loadVersionHistory();
+    }
+    
+    // Listen for document save events
+    window.addEventListener('documentSaved', this.handleDocumentSaved.bind(this));
+  }
+
+  ngOnChanges() {
+    console.log('Comments sidebar changes - documentId:', this.documentId, 'editor:', !!this.editor);
+    
+    // Reload version history when document ID changes
+    if (this.documentId) {
+      this.loadVersionHistory();
+    }
+  }
+
+  ngOnDestroy() {
+    // Clean up event listener
+    window.removeEventListener('documentSaved', this.handleDocumentSaved.bind(this));
+  }
+
+  private handleDocumentSaved = (event: any) => {
+    console.log('Document saved event received:', event.detail);
+    
+    if (event.detail?.documentId === this.documentId) {
+      // Create a new version when document is saved
+      const version = this.saveVersion('Document saved');
+      if (version) {
+        console.log('Version saved successfully:', version.version);
+      } else {
+        console.warn('Failed to save version');
+      }
+    }
+  }
+
   saveManualVersion() {
     const description = prompt('Enter a description for this version (optional):');
     if (description !== null) { // User didn't cancel
@@ -323,35 +363,6 @@ export class CommentsSidebarComponent {
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  }
-
-  ngOnInit() {
-    // Load version history when component initializes
-    if (this.documentId) {
-      this.loadVersionHistory();
-    }
-    
-    // Listen for document save events
-    window.addEventListener('documentSaved', this.handleDocumentSaved.bind(this));
-  }
-
-  ngOnChanges() {
-    // Reload version history when document ID changes
-    if (this.documentId) {
-      this.loadVersionHistory();
-    }
-  }
-
-  ngOnDestroy() {
-    // Clean up event listener
-    window.removeEventListener('documentSaved', this.handleDocumentSaved.bind(this));
-  }
-
-  private handleDocumentSaved = (event: any) => {
-    if (event.detail?.documentId === this.documentId) {
-      // Create a new version when document is saved
-      this.saveVersion('Document saved');
-    }
   }
 
   private loadVersionHistory() {
@@ -638,11 +649,4 @@ export class CommentsSidebarComponent {
       return;
     }
     
-    if (confirm(`Are you sure you want to delete version ${version.version}?`)) {
-      const versions = this.getStoredVersions(this.documentId);
-      const filteredVersions = versions.filter(v => v.id !== version.id);
-      
-      try {
-        const storageKey = `doc-versions-${this.documentId}`;
-        localStorage.setItem(storageKey, JSON.stringify(filteredVersions));
-        this.
+    
