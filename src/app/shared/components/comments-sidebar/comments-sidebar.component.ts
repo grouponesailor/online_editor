@@ -55,7 +55,7 @@ export class CommentsSidebarComponent {
   tabs: Tab[] = [
     { id: 'comments', label: 'Comments', icon: 'fas fa-comments' },
     { id: 'history', label: 'History', icon: 'fas fa-history' },
-    { id: 'collaborators', label: 'People', icon: 'fas fa-users' }
+    { id: 'collaborators', label: 'AI', icon: 'fas fa-robot' }
   ];
 
   comments: Comment[] = [
