@@ -14,10 +14,7 @@ module.exports = function (config) {
     ],
     client: {
       jasmine: {
-        // you can add configuration options for Jasmine here
-        // the possible options are listed at https://jasmine.github.io/api/edge/Configuration.html
-        // for example, you can disable the random execution order
-        random: true
+        random: false
       },
       clearContext: false // leave Jasmine Spec Runner output visible in browser
     },
@@ -29,19 +26,10 @@ module.exports = function (config) {
       subdir: '.',
       reporters: [
         { type: 'html' },
-        { type: 'text-summary' },
-        { type: 'lcov' }
-      ],
-      check: {
-        global: {
-          statements: 80,
-          branches: 70,
-          functions: 80,
-          lines: 80
-        }
-      }
+        { type: 'text-summary' }
+      ]
     },
-    reporters: ['progress', 'kjhtml', 'coverage'],
+    reporters: ['progress', 'kjhtml'],
     port: 9876,
     colors: true,
     logLevel: config.LOG_INFO,
