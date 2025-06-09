@@ -37,7 +37,7 @@ export class FileToolbarComponent {
         
         // Navigate to the new document after a short delay
         setTimeout(() => {
-          window.location.href = `/editor/${newDocument.id}`;
+          window.location.href = `/documents/${newDocument.id}`;
         }, 1000);
       },
       (error: any) => {

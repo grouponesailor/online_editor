@@ -61,13 +61,13 @@ export class FileManagerComponent implements OnInit {
     this.fileService.createNewDocument().subscribe(
       (document: DocumentFile) => {
         // Navigate to the new document
-        window.location.href = `/documents/${document.id}`;
+        window.open(`/documents/${document.id}`, '_self');
       }
     );
   }
 
   openDocument(document: DocumentFile) {
-    window.location.href = `/documents/${document.id}`;
+    window.open(`/documents/${document.id}`, '_self');
   }
 
   deleteDocument(document: DocumentFile) {

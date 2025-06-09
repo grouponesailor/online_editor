@@ -120,7 +120,7 @@ export class FileService {
 
   createNewDocument(): Observable<DocumentFile> {
     const newDoc: DocumentFile = {
-      id: `doc${Date.now()}`,
+      id: `new-${Date.now()}`,
       name: 'Untitled Document',
       lastModified: new Date(),
       size: 0,
