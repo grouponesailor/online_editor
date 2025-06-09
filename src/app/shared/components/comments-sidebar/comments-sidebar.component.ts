@@ -620,7 +620,7 @@ export class CommentsSidebarComponent {
     return textNodes;
   }
 
-  private getLanguageName(code: string): string {
+  getLanguageName(code: string): string {
     const lang = this.supportedLanguages.find(l => l.code === code);
     return lang ? lang.name : code;
   }
