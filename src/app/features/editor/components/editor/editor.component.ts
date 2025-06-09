@@ -245,9 +245,11 @@ export class EditorComponent implements OnInit, OnDestroy, AfterViewInit {
 
   private triggerVersionSave(description?: string) {
     // Get the comments sidebar component and trigger version save
-    const commentsSidebar = document.querySelector('app-comments-sidebar');
-    if (commentsSidebar && (commentsSidebar as any).saveVersion) {
-      (commentsSidebar as any).saveVersion(description);
+    if (this.documentId) {
+      const commentsSidebar = document.querySelector('app-comments-sidebar');
+      if (commentsSidebar && (commentsSidebar as any).saveVersion) {
+        (commentsSidebar as any).saveVersion(description);
+      }
     }
   }
 

@@ -327,7 +327,9 @@ export class CommentsSidebarComponent {
 
   ngOnInit() {
     // Load version history when component initializes
-    this.loadVersionHistory();
+    if (this.documentId) {
+      this.loadVersionHistory();
+    }
     
     // Listen for editor changes to auto-save versions
     if (this.editor) {
@@ -336,6 +338,11 @@ export class CommentsSidebarComponent {
   }
 
   ngOnChanges() {
+    // Reload version history when document ID changes
+    if (this.documentId) {
+      this.loadVersionHistory();
+    }
+    
     if (this.editor) {
       this.setupAutoVersioning();
     }
@@ -355,10 +362,16 @@ export class CommentsSidebarComponent {
   }
 
   private loadVersionHistory() {
-    this.versionHistory = this.getStoredVersions(this.documentId);
+    if (this.documentId) {
+      this.versionHistory = this.getStoredVersions(this.documentId);
+    } else {
+      this.versionHistory = [];
+    }
   }
 
   private getStoredVersions(docId: string): VersionHistory[] {
+    if (!docId) return [];
+    
     try {
       const storageKey = `doc-versions-${docId}`;
       const stored = localStorage.getItem(storageKey);
@@ -373,19 +386,16 @@ export class CommentsSidebarComponent {
       console.error('Error loading version history:', error);
     }
     
-    // Return default initial version if none exists
-    return [{
-      id: `v-${Date.now()}`,
-      version: 1,
-      author: 'Current User',
-      timestamp: new Date(),
-      description: 'Initial document creation',
-      changes: ['Document created'],
-      content: this.editor?.getHTML() || ''
-    }];
+    // Return empty array if no versions exist yet
+    return [];
   }
 
   private saveNewVersion(docId: string, content: string, description?: string): VersionHistory {
+    if (!docId) {
+      console.error('Cannot save version: no document ID provided');
+      return {} as VersionHistory;
+    }
+    
     const versions = this.getStoredVersions(docId);
     const nextVersion = Math.max(...versions.map(v => v.version), 0) + 1;
     
@@ -477,6 +487,9 @@ export class CommentsSidebarComponent {
   private autoSaveVersion() {
     if (!this.editor) return;
     
+    // Don't auto-save if we don't have a document ID
+    if (!this.documentId) return;
+    
     const content = this.editor.getHTML();
     const currentVersions = this.getStoredVersions(this.documentId);
     
@@ -490,13 +503,15 @@ export class CommentsSidebarComponent {
 
   // Public method to manually save a version (called from save operations)
   public saveVersion(description?: string) {
-    if (!this.editor) return;
+    if (!this.editor || !this.documentId) return;
     
     const content = this.editor.getHTML();
     return this.saveNewVersion(this.documentId, content, description || 'Manual save');
   }
 
   private restoreVersionContent(docId: string, versionId: string): boolean {
+    if (!docId || !versionId) return false;
+    
     const versions = this.getStoredVersions(docId);
     const version = versions.find(v => v.id === versionId);
     
@@ -620,6 +635,11 @@ export class CommentsSidebarComponent {
   }
 
   deleteVersion(version: VersionHistory) {
+    if (!this.documentId) {
+      alert('Cannot delete version: no document ID');
+      return;
+    }
+    
     if (version.version === 1) {
       alert('Cannot delete the initial version');
       return;
