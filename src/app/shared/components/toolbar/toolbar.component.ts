@@ -4,6 +4,7 @@ import { Shape as ShapeExtension } from '../../../extensions/shape';
 import { Signature as SignatureExtension } from '../../../extensions/signature';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { Subject, takeUntil } from 'rxjs';
+import { FileService } from '../../../features/file/services/file.service';
 
 interface FontFamily {
   label: string;
@@ -211,7 +212,6 @@ export class ToolbarComponent implements OnInit, OnDestroy, OnChanges {
 
   constructor(
     private sanitizer: DomSanitizer,
-    private fileService: FileService
   ) {}
 
   ngOnInit() {

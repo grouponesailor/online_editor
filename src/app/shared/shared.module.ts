@@ -8,9 +8,6 @@ import { ImageEditDialogComponent } from './components/image-edit-dialog/image-e
 import { CommentsSidebarComponent } from './components/comments-sidebar/comments-sidebar.component';
 import { SafeHtmlPipe } from './pipes/safe-html.pipe';
 
-// Import File Module components
-import { FileModule } from '../features/file/file.module';
-
 @NgModule({
   declarations: [
     ToolbarComponent,
@@ -21,8 +18,7 @@ import { FileModule } from '../features/file/file.module';
   ],
   imports: [
     CommonModule,
-    FormsModule,
-    FileModule
+    FormsModule
   ],
   exports: [
     CommonModule,
