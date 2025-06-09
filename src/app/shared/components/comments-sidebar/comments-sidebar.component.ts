@@ -853,8 +853,7 @@ export class CommentsSidebarComponent implements OnInit, OnChanges {
     if (confirm(`Are you sure you want to restore to version ${version.version}? This will overwrite current changes.`)) {
       const success = this.restoreVersionContent(this.documentId, version.id);
       if (success) {
-        alert(`Successfully restored to version ${
-        )
+        alert(`Successfully restored to version ${version.version}!`);
       }
     }
   }
