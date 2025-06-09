@@ -10,4 +10,17 @@
 code {
   font-family: 'Courier New', monospace;
   font-size: 0.8em;
+}
+
+/* Reduce share dialog height and make it scrollable if needed */
+:host ::ng-deep .share-dialog-main {
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+/* Optionally, ensure the modal itself is centered and doesn't exceed viewport */
+:host ::ng-deep .share-dialog-modal {
+  max-width: 600px;
+  width: 100%;
+  margin: 0 auto;
 } 
