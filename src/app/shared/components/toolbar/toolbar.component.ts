@@ -209,7 +209,10 @@ export class ToolbarComponent implements OnInit, OnDestroy, OnChanges {
 
   private destroy$ = new Subject<void>();
 
-  constructor(private sanitizer: DomSanitizer) {}
+  constructor(
+    private sanitizer: DomSanitizer,
+    private fileService: FileService
+  ) {}
 
   ngOnInit() {
     // Close dropdowns when clicking outside
