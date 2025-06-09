@@ -954,4 +954,11 @@ export class ToolbarComponent implements OnInit, OnDestroy, OnChanges {
       this.editor.chain().focus().unsetLink().run();
     }
   }
+
+  deleteSignature(signature: string) {
+    const index = this.signatures.indexOf(signature);
+    if (index !== -1) {
+      this.signatures.splice(index, 1);
+    }
+  }
 }
