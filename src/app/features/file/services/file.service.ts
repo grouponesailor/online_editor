@@ -330,9 +330,37 @@ export class FileService {
     }
   }
 
+  // Method to update document content
+  updateDocumentContent(documentId: string, content: string): Observable<boolean> {
+    try {
+      // Save content to localStorage
+      const storageKey = `document_${documentId}_content`;
+      localStorage.setItem(storageKey, content);
+      
+      // Update document size estimate
+      const existingIndex = this.mockDocuments.findIndex(doc => doc.id === documentId);
+      if (existingIndex > -1) {
+        this.mockDocuments[existingIndex].size = content.length * 2; // Rough estimate
+        this.mockDocuments[existingIndex].lastModified = new Date();
+        this.saveMockDocumentsToStorage();
+      }
+      
+      return of(true).pipe(delay(50));
+    } catch (error) {
+      console.error('Failed to update document content:', error);
+      return of(false).pipe(delay(50));
+    }
+  }
   private getCurrentDocumentContent(documentId: string): string {
-    // In a real implementation, this would get content from the editor
-    // For now, return mock content
+    // Try to get actual content from localStorage first
+    const contentKey = `document_${documentId}_content`;
+    const savedContent = localStorage.getItem(contentKey);
+    
+    if (savedContent) {
+      return savedContent;
+    }
+    
+    // Fallback to mock content
     return `Document content for ${documentId} - saved at ${new Date().toISOString()}`;
   }
 

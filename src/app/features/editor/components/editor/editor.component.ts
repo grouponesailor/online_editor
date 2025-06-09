@@ -287,6 +287,9 @@ export class EditorComponent implements OnInit, OnDestroy, AfterViewInit {
       // Trigger debounced update to File Manager
       this.nameChangeDebouncer.next(this.documentName);
       
+      // Also save the document content when name changes
+      this.saveToFileManager();
+      
       if (this.networkStatus === 'on-premise' || this.networkStatus === 'online') {
         const url = `/api/documents/${this.documentId}`;
         fetch(url, {
@@ -639,6 +642,9 @@ export class EditorComponent implements OnInit, OnDestroy, AfterViewInit {
           this.lastSaved = new Date();
         }
         
+        // Always save to File Manager on content changes
+        this.saveToFileManager();
+        
         // Update document statistics
         this.updateDocumentStats();
         
@@ -703,18 +709,28 @@ export class EditorComponent implements OnInit, OnDestroy, AfterViewInit {
       this.hasOfflineChanges = false;
       this.lastSaved = new Date();
       
-      // Save through file service and add to File Manager list
-      this.fileService.saveDocumentLocally(this.documentId, this.documentName)
-        .subscribe((success: boolean) => {
-          if (success) {
-            console.log('Document saved offline and added to File Manager');
-          }
-        });
+      // Save to File Manager
+      this.saveToFileManager();
     } catch (error) {
       console.error('Failed to save document offline:', error);
     }
   }
 
+  private saveToFileManager() {
+    // Save document to File Manager with current content
+    this.fileService.saveDocumentLocally(this.documentId, this.documentName)
+      .subscribe((success: boolean) => {
+        if (success) {
+          console.log('Document saved and added to File Manager');
+          
+          // Update the document content in FileService
+          if (this.editor) {
+            const content = this.editor.getHTML();
+            this.fileService.updateDocumentContent(this.documentId, content);
+          }
+        }
+      });
+  }
   syncOfflineChanges() {
     this.shareService.syncOfflineChanges()
       .subscribe((success: boolean) => {

@@ -68,6 +68,13 @@ export class FileToolbarComponent {
       (success: boolean) => {
         if (success) {
           this.showSaveNotification('Document saved locally and added to File Manager');
+          
+          // Also save the current editor content
+          const editorElement = document.querySelector('.tiptap');
+          if (editorElement) {
+            const content = editorElement.innerHTML || '';
+            this.fileService.updateDocumentContent(this.documentId, content).subscribe();
+          }
         } else {
           this.showSaveNotification('Failed to save document', 'error');
         }
