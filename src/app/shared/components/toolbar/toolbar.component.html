@@ -21,7 +21,8 @@
       (newDocument)="onNewDocument()"
       (openDocument)="onOpenDocument()"
       (saveDocument)="onSaveDocument()"
-      (exportDocument)="onExportPDF()">
+      (exportDocument)="onExportPDF()"
+      (share)="toggleShareDialog()">
     </app-file-toolbar>
   </div>
 
@@ -42,16 +43,6 @@
         [disabled]="!canRedo()"
         title="Redo">
         <i class="fas fa-redo"></i>
-      </button>
-    </div>
-
-    <!-- Share Button -->
-    <div class="flex gap-1 border-r pr-2">
-      <button
-        class="p-2 rounded hover:bg-gray-100"
-        (click)="toggleShareDialog()"
-        title="Share Document">
-        <i class="fas fa-share-alt"></i>
       </button>
     </div>
 
@@ -566,3 +557,11 @@
     </div>
   </div>
 </div>
+
+<!-- Share Dialog -->
+<app-share-dialog
+  *ngIf="showShareDialog"
+  [documentId]="documentId"
+  [documentName]="getCurrentDocumentName()"
+  (close)="toggleShareDialog()">
+</app-share-dialog>

@@ -84,25 +84,6 @@
         </div>
       </div>
 
-      <!-- Network Status -->
-      <div class="mb-6 p-3 bg-gray-50 rounded-lg">
-        <div class="flex items-center gap-2 mb-2">
-          <i [class]="getNetworkStatusIcon()"></i>
-          <h3 class="font-medium">Network Status</h3>
-        </div>
-        <div class="text-sm text-gray-600">
-          <div *ngIf="networkStatus === 'online'">
-            ✅ Connected to cloud server: <code class="bg-white px-1 rounded">{{serverInfo}}</code>
-          </div>
-          <div *ngIf="networkStatus === 'on-premise'">
-            🏢 Connected to on-premise server: <code class="bg-white px-1 rounded">{{serverInfo}}</code>
-          </div>
-          <div *ngIf="networkStatus === 'offline'">
-            💾 Working offline - Changes will sync when reconnected
-          </div>
-        </div>
-      </div>
-
       <!-- Share with People -->
       <div class="mb-6">
         <div class="flex items-center gap-2 mb-2">
