@@ -166,6 +166,15 @@ export class EditorComponent implements OnInit, OnDestroy, AfterViewInit {
   private resizeObserver: ResizeObserver | null = null;
   private contentChangeSubscription: Subscription | null = null;
 
+  // Flexible margin ruler state
+  leftMargin: number = 15; // mm
+  rightMargin: number = 15; // mm
+  rulerWidth: number = 210; // mm (A4 width)
+  dragging: 'left' | 'right' | null = null;
+
+  get leftMarginPx() { return this.leftMargin * 3.78; } // 1mm ≈ 3.78px
+  get rightMarginPx() { return this.rightMargin * 3.78; }
+
   constructor(
     private route: ActivatedRoute,
     private networkConfigService: NetworkConfigService,
@@ -908,4 +917,30 @@ export class EditorComponent implements OnInit, OnDestroy, AfterViewInit {
       el.style.transformOrigin = 'top left';
     });
   }
+
+  startDrag(which: 'left' | 'right', event: MouseEvent) {
+    this.dragging = which;
+    document.addEventListener('mousemove', this.onDrag);
+    document.addEventListener('mouseup', this.stopDrag);
+  }
+
+  onDrag = (event: MouseEvent) => {
+    if (!this.dragging) return;
+    const svg = document.querySelector('.margin-ruler svg');
+    if (!svg) return;
+    const rect = svg.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const mm = x / 3.78;
+    if (this.dragging === 'left') {
+      this.leftMargin = Math.max(5, Math.min(mm, this.rulerWidth - this.rightMargin - 20));
+    } else {
+      this.rightMargin = Math.max(5, Math.min(this.rulerWidth - mm, this.rulerWidth - this.leftMargin - 20));
+    }
+  };
+
+  stopDrag = () => {
+    this.dragging = null;
+    document.removeEventListener('mousemove', this.onDrag);
+    document.removeEventListener('mouseup', this.stopDrag);
+  };
 }
