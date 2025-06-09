@@ -7,6 +7,7 @@ import { ShareDialogComponent } from './components/share-dialog/share-dialog.com
 import { ImageEditDialogComponent } from './components/image-edit-dialog/image-edit-dialog.component';
 import { CommentsSidebarComponent } from './components/comments-sidebar/comments-sidebar.component';
 import { SafeHtmlPipe } from './pipes/safe-html.pipe';
+import { FileToolbarComponent } from '../features/file/components/file-toolbar/file-toolbar.component';
 
 @NgModule({
   declarations: [
@@ -14,7 +15,8 @@ import { SafeHtmlPipe } from './pipes/safe-html.pipe';
     ShareDialogComponent,
     ImageEditDialogComponent,
     CommentsSidebarComponent,
-    SafeHtmlPipe
+    SafeHtmlPipe,
+    FileToolbarComponent
   ],
   imports: [
     CommonModule,
@@ -27,7 +29,8 @@ import { SafeHtmlPipe } from './pipes/safe-html.pipe';
     ShareDialogComponent,
     ImageEditDialogComponent,
     CommentsSidebarComponent,
-    SafeHtmlPipe
+    SafeHtmlPipe,
+    FileToolbarComponent
   ]
 })
 export class SharedModule { }
