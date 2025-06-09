@@ -944,17 +944,3 @@ export class EditorComponent implements OnInit, OnDestroy, AfterViewInit {
     if (!svg) return;
     const rect = svg.getBoundingClientRect();
     const x = event.clientX - rect.left;
-    const mm = x / 3.78;
-    if (this.dragging === 'left') {
-      this.leftMargin = Math.max(5, Math.min(mm, this.rulerWidth - this.rightMargin - 20));
-    } else {
-      this.rightMargin = Math.max(5, Math.min(this.rulerWidth - mm, this.rulerWidth - this.leftMargin - 20));
-    }
-  };
-
-  stopDrag = () => {
-    this.dragging = null;
-    document.removeEventListener('mousemove', this.onDrag);
-    document.removeEventListener('mouseup', this.stopDrag);
-  };
-}

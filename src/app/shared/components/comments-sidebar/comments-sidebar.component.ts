@@ -363,7 +363,7 @@ export class CommentsSidebarComponent implements OnInit, OnChanges {
     if (!this.editor) return;
 
     // Listen for significant changes (debounced)
-    let saveTimeout: any;
+    let saveTimeout: NodeJS.Timeout;
     this.editor.on('update', () => {
       clearTimeout(saveTimeout);
       saveTimeout = setTimeout(() => {
