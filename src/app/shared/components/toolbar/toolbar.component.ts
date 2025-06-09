@@ -74,6 +74,8 @@ export class ToolbarComponent implements OnInit, OnDestroy, OnChanges {
   showShapesMenu = false;
   showSignatureMenu = false;
   showDiagramsMenu = false;
+  showTextColorPalette = false;
+  showHighlightPalette = false;
   formatPainterActive = false;
   selectedImage: any = null;
   showLinkDialog = false;
@@ -86,6 +88,8 @@ export class ToolbarComponent implements OnInit, OnDestroy, OnChanges {
   currentHeading = 'paragraph';
   currentTextColor = '#000000';
   currentHighlightColor = '#FFEB3B';
+  customTextColor = '#000000';
+  customHighlightColor = '#FFEB3B';
   tableSelection = { row: 0, col: 0 };
   signatures: string[] = [
     'Best regards,<br>Your Name',
@@ -176,6 +180,33 @@ export class ToolbarComponent implements OnInit, OnDestroy, OnChanges {
     { category: 'Tables', key: 'Shift + Tab', description: 'Previous cell' }
   ];
 
+  // Color options
+  commonColors: string[] = [
+    '#000000', // Black
+    '#FF0000', // Red
+    '#00FF00', // Green
+    '#0000FF', // Blue
+    '#FF00FF', // Magenta
+    '#00FFFF', // Cyan
+    '#FFFF00', // Yellow
+    '#808080', // Gray
+    '#800000', // Dark Red
+    '#008000', // Dark Green
+  ];
+
+  highlightColors: string[] = [
+    '#FFEB3B', // Yellow
+    '#FF9800', // Orange
+    '#F44336', // Red
+    '#E91E63', // Pink
+    '#9C27B0', // Purple
+    '#673AB7', // Deep Purple
+    '#3F51B5', // Indigo
+    '#2196F3', // Blue
+    '#03A9F4', // Light Blue
+    '#00BCD4', // Cyan
+  ];
+
   private destroy$ = new Subject<void>();
 
   constructor(private sanitizer: DomSanitizer) {}
@@ -184,7 +215,11 @@ export class ToolbarComponent implements OnInit, OnDestroy, OnChanges {
     // Close dropdowns when clicking outside
     document.addEventListener('click', (event) => {
       const target = event.target as HTMLElement;
-      if (!target.closest('.relative')) {
+      if (!target.closest('.color-palette-container')) {
+        this.showTextColorPalette = false;
+        this.showHighlightPalette = false;
+      }
+      if (!target.closest('.dropdown-container')) {
         this.showHeadingMenu = false;
         this.showTableMenu = false;
         this.showImageMenu = false;
@@ -707,6 +742,16 @@ export class ToolbarComponent implements OnInit, OnDestroy, OnChanges {
     return this.sanitizer.bypassSecurityTrustHtml(html);
   }
 
+  // Helper method to determine if a color is light
+  isLightColor(color: string): boolean {
+    const hex = color.replace('#', '');
+    const r = parseInt(hex.substr(0, 2), 16);
+    const g = parseInt(hex.substr(2, 2), 16);
+    const b = parseInt(hex.substr(4, 2), 16);
+    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+    return brightness > 128;
+  }
+
   insertShape(shape: ShapeDefinition) {
     if (!this.editor) return;
 
@@ -748,9 +793,12 @@ export class ToolbarComponent implements OnInit, OnDestroy, OnChanges {
     this.showTextColorPicker = !this.showTextColorPicker;
   }
 
-  applyTextColor() {
-    this.editor?.chain().focus().setMark('textStyle', { color: this.currentTextColor }).run();
-    this.showTextColorPicker = false;
+  applyTextColor(color: string) {
+    if (this.editor) {
+      this.editor.chain().focus().setColor(color).run();
+      this.currentTextColor = color;
+      this.showTextColorPalette = false;
+    }
   }
 
   // Highlight methods
@@ -758,9 +806,12 @@ export class ToolbarComponent implements OnInit, OnDestroy, OnChanges {
     this.showHighlightPicker = !this.showHighlightPicker;
   }
 
-  applyHighlight() {
-    this.editor?.chain().focus().setMark('highlight', { color: this.currentHighlightColor }).run();
-    this.showHighlightPicker = false;
+  applyHighlight(color: string) {
+    if (this.editor) {
+      this.editor.chain().focus().setHighlight({ color }).run();
+      this.currentHighlightColor = color;
+      this.showHighlightPalette = false;
+    }
   }
 
   // Line height method
