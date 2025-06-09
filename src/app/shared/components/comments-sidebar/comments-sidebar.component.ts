@@ -31,6 +31,7 @@ interface VersionHistory {
   timestamp: Date;
   description: string;
   changes: string[];
+  content: string;
 }
 
 interface Collaborator {
