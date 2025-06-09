@@ -71,6 +71,7 @@
           "options": {
             "polyfills": ["zone.js", "zone.js/testing"],
             "tsConfig": "tsconfig.spec.json",
+            "main": "src/test.ts",
             "assets": [
               "src/favicon.ico",
               "src/assets"

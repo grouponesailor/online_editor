@@ -9,6 +9,8 @@
   },
   "include": [
     "src/**/*.spec.ts",
+    "src/**/*.e2e.spec.ts",
+    "src/**/*.integration.spec.ts",
     "src/**/*.d.ts"
   ]
 }
