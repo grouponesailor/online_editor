@@ -442,6 +442,211 @@ export class CommentsSidebarComponent implements OnInit, OnChanges {
     return newVersion;
   }
 
+  // Missing methods for version history
+  compareVersions(version1: VersionHistory, version2: VersionHistory) {
+    console.log('Compare versions:', version1, version2);
+    // Implement version comparison logic
+    alert(`Comparing version ${version1.version} with version ${version2.version}`);
+  }
+
+  deleteVersion(version: VersionHistory) {
+    if (confirm(`Are you sure you want to delete version ${version.version}?`)) {
+      const versions = this.getStoredVersions(this.documentId);
+      const filteredVersions = versions.filter(v => v.id !== version.id);
+      
+      try {
+        const storageKey = `doc-versions-${this.documentId}`;
+        localStorage.setItem(storageKey, JSON.stringify(filteredVersions));
+        this.versionHistory = filteredVersions;
+        console.log(`Deleted version ${version.version}`);
+      } catch (error) {
+        console.error('Error deleting version:', error);
+      }
+    }
+  }
+
+  // Missing AI methods
+  translateDocument() {
+    if (!this.editor || !this.targetLanguage) return;
+    
+    this.isTranslating = true;
+    this.translationStatus = {
+      type: 'info',
+      message: 'Translation in progress...'
+    };
+    
+    // Simulate translation process
+    setTimeout(() => {
+      const content = this.editor!.getText();
+      const translatedContent = `[Translated to ${this.getLanguageName(this.targetLanguage)}] ${content}`;
+      
+      if (this.translateInPlace) {
+        // Replace content
+        this.editor!.commands.setContent(`<p>${translatedContent}</p>`);
+      } else {
+        // Add translation at the end
+        this.editor!.commands.insertContent(`<hr><h3>Translation (${this.getLanguageName(this.targetLanguage)})</h3><p>${translatedContent}</p>`);
+      }
+      
+      this.isTranslating = false;
+      this.translationStatus = {
+        type: 'success',
+        message: `Document translated to ${this.getLanguageName(this.targetLanguage)}`
+      };
+      
+      // Clear status after 3 seconds
+      setTimeout(() => {
+        this.translationStatus = null;
+      }, 3000);
+    }, 2000);
+  }
+
+  getLanguageName(code: string): string {
+    const language = this.supportedLanguages.find(lang => lang.code === code);
+    return language ? language.name : code;
+  }
+
+  improveWriting() {
+    if (!this.editor) return;
+    
+    const selectedText = this.getSelectedText();
+    if (!selectedText) {
+      alert('Please select some text to improve');
+      return;
+    }
+    
+    // Simulate AI improvement
+    const improvedText = `[Improved] ${selectedText}`;
+    this.replaceSelectedText(improvedText);
+  }
+
+  fixGrammar() {
+    if (!this.editor) return;
+    
+    const selectedText = this.getSelectedText();
+    if (!selectedText) {
+      alert('Please select some text to fix');
+      return;
+    }
+    
+    // Simulate grammar fixing
+    const fixedText = `[Grammar Fixed] ${selectedText}`;
+    this.replaceSelectedText(fixedText);
+  }
+
+  summarizeContent() {
+    if (!this.editor) return;
+    
+    const content = this.editor.getText();
+    if (!content.trim()) {
+      alert('No content to summarize');
+      return;
+    }
+    
+    // Simulate summarization
+    const summary = `Summary: This document contains ${content.split(' ').length} words and discusses various topics.`;
+    this.editor.commands.insertContent(`<hr><h3>Summary</h3><p>${summary}</p>`);
+  }
+
+  changeTone() {
+    if (!this.editor) return;
+    
+    const selectedText = this.getSelectedText();
+    if (!selectedText) {
+      alert('Please select some text to change tone');
+      return;
+    }
+    
+    const tone = prompt('Enter desired tone (formal, casual, professional, friendly):');
+    if (tone) {
+      const changedText = `[${tone} tone] ${selectedText}`;
+      this.replaceSelectedText(changedText);
+    }
+  }
+
+  generateOutline() {
+    if (!this.editor) return;
+    
+    const content = this.editor.getText();
+    if (!content.trim()) {
+      alert('No content to generate outline from');
+      return;
+    }
+    
+    // Simulate outline generation
+    const outline = `
+      <h2>Document Outline</h2>
+      <ol>
+        <li>Introduction</li>
+        <li>Main Content</li>
+        <li>Conclusion</li>
+      </ol>
+    `;
+    
+    this.editor.commands.insertContent(outline);
+  }
+
+  addConclusion() {
+    if (!this.editor) return;
+    
+    const content = this.editor.getText();
+    if (!content.trim()) {
+      alert('No content to conclude');
+      return;
+    }
+    
+    // Simulate conclusion generation
+    const conclusion = `
+      <hr>
+      <h2>Conclusion</h2>
+      <p>In conclusion, this document has covered the main topics and provides valuable insights.</p>
+    `;
+    
+    this.editor.commands.insertContent(conclusion);
+  }
+
+  expandContent() {
+    if (!this.editor) return;
+    
+    const selectedText = this.getSelectedText();
+    if (!selectedText) {
+      alert('Please select some text to expand');
+      return;
+    }
+    
+    // Simulate content expansion
+    const expandedText = `${selectedText} [Expanded with additional details and context to provide more comprehensive information.]`;
+    this.replaceSelectedText(expandedText);
+  }
+
+  askAI() {
+    if (!this.aiQuestion.trim()) return;
+    
+    this.isProcessingAI = true;
+    
+    // Simulate AI response
+    setTimeout(() => {
+      this.aiResponse = `AI Response: Regarding "${this.aiQuestion}", here's what I can help you with based on your document content.`;
+      this.isProcessingAI = false;
+      this.aiQuestion = '';
+    }, 1500);
+  }
+
+  // Helper methods
+  private getSelectedText(): string {
+    if (!this.editor) return '';
+    
+    const { from, to } = this.editor.state.selection;
+    return this.editor.state.doc.textBetween(from, to, ' ');
+  }
+
+  private replaceSelectedText(newText: string) {
+    if (!this.editor) return;
+    
+    const { from, to } = this.editor.state.selection;
+    this.editor.chain().focus().deleteRange({ from, to }).insertContent(newText).run();
+  }
+
   private detectChanges(oldContent: string, newContent: string): string[] {
     const changes: string[] = [];
     
