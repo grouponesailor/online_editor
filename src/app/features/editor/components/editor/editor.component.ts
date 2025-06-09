@@ -235,22 +235,13 @@ export class EditorComponent implements OnInit, OnDestroy, AfterViewInit {
     // Listen for document save events to trigger version saves
     window.addEventListener('documentSaved', (event: any) => {
       if (event.detail?.documentId === this.documentId) {
-        this.triggerVersionSave('Document saved');
+        // The comments sidebar will handle this automatically
+        console.log('Document saved event received for:', this.documentId);
       }
     });
 
     this.initializeEditor();
     this.setupPageManagement();
-  }
-
-  private triggerVersionSave(description?: string) {
-    // Get the comments sidebar component and trigger version save
-    if (this.documentId) {
-      const commentsSidebar = document.querySelector('app-comments-sidebar');
-      if (commentsSidebar && (commentsSidebar as any).saveVersion) {
-        (commentsSidebar as any).saveVersion(description);
-      }
-    }
   }
 
   ngAfterViewInit() {
@@ -953,17 +944,3 @@ export class EditorComponent implements OnInit, OnDestroy, AfterViewInit {
     if (!svg) return;
     const rect = svg.getBoundingClientRect();
     const x = event.clientX - rect.left;
-    const mm = x / 3.78;
-    if (this.dragging === 'left') {
-      this.leftMargin = Math.max(5, Math.min(mm, this.rulerWidth - this.rightMargin - 20));
-    } else {
-      this.rightMargin = Math.max(5, Math.min(this.rulerWidth - mm, this.rulerWidth - this.leftMargin - 20));
-    }
-  };
-
-  stopDrag = () => {
-    this.dragging = null;
-    document.removeEventListener('mousemove', this.onDrag);
-    document.removeEventListener('mouseup', this.stopDrag);
-  };
-}

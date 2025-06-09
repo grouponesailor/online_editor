@@ -307,46 +307,6 @@ export class CommentsSidebarComponent {
 
   newCommentText: string = '';
 
-  ngOnInit() {
-    console.log('Comments sidebar initialized with documentId:', this.documentId);
-    
-    // Load version history when component initializes
-    if (this.documentId) {
-      this.loadVersionHistory();
-    }
-    
-    // Listen for document save events
-    window.addEventListener('documentSaved', this.handleDocumentSaved.bind(this));
-  }
-
-  ngOnChanges() {
-    console.log('Comments sidebar changes - documentId:', this.documentId, 'editor:', !!this.editor);
-    
-    // Reload version history when document ID changes
-    if (this.documentId) {
-      this.loadVersionHistory();
-    }
-  }
-
-  ngOnDestroy() {
-    // Clean up event listener
-    window.removeEventListener('documentSaved', this.handleDocumentSaved.bind(this));
-  }
-
-  private handleDocumentSaved = (event: any) => {
-    console.log('Document saved event received:', event.detail);
-    
-    if (event.detail?.documentId === this.documentId) {
-      // Create a new version when document is saved
-      const version = this.saveVersion('Document saved');
-      if (version) {
-        console.log('Version saved successfully:', version.version);
-      } else {
-        console.warn('Failed to save version');
-      }
-    }
-  }
-
   saveManualVersion() {
     const description = prompt('Enter a description for this version (optional):');
     if (description !== null) { // User didn't cancel
@@ -363,6 +323,42 @@ export class CommentsSidebarComponent {
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
+  ngOnInit() {
+    // Load version history when component initializes
+    if (this.documentId) {
+      this.loadVersionHistory();
+    }
+    
+    // Listen for editor changes to auto-save versions
+    if (this.editor) {
+      this.setupAutoVersioning();
+    }
+  }
+
+  ngOnChanges() {
+    // Reload version history when document ID changes
+    if (this.documentId) {
+      this.loadVersionHistory();
+    }
+    
+    if (this.editor) {
+      this.setupAutoVersioning();
+    }
+  }
+
+  private setupAutoVersioning() {
+    if (!this.editor) return;
+
+    // Listen for significant changes (debounced)
+    let saveTimeout: any;
+    this.editor.on('update', () => {
+      clearTimeout(saveTimeout);
+      saveTimeout = setTimeout(() => {
+        this.autoSaveVersion();
+      }, 30000); // Auto-save version every 30 seconds of inactivity
+    });
   }
 
   private loadVersionHistory() {
@@ -507,9 +503,19 @@ export class CommentsSidebarComponent {
 
   // Public method to manually save a version (called from save operations)
   public saveVersion(description?: string) {
-    if (!this.editor || !this.documentId) return;
+    if (!this.editor || !this.documentId) {
+      console.warn('Cannot save version: missing editor or document ID');
+      return null;
+    }
     
     const content = this.editor.getHTML();
+    
+    // Don't save if content is empty
+    if (!content || content.trim() === '<p></p>' || content.trim() === '') {
+      console.log('Skipping version save: content is empty');
+      return null;
+    }
+    
     return this.saveNewVersion(this.documentId, content, description || 'Manual save');
   }
 
@@ -649,4 +655,434 @@ export class CommentsSidebarComponent {
       return;
     }
     
+    if (confirm(`Are you sure you want to delete version ${version.version}?`)) {
+      const versions = this.getStoredVersions(this.documentId);
+      const filteredVersions = versions.filter(v => v.id !== version.id);
+      
+      try {
+        const storageKey = `doc-versions-${this.documentId}`;
+        localStorage.setItem(storageKey, JSON.stringify(filteredVersions));
+        this.versionHistory = filteredVersions;
+        console.log(`Deleted version ${version.version}`);
+      } catch (error) {
+        console.error('Error deleting version:', error);
+        alert('Failed to delete version');
+      }
+    }
+  }
+
+  compareVersions(version1: VersionHistory, version2: VersionHistory) {
+    // Simple comparison - in a real app, you'd use a proper diff library
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+    modal.innerHTML = `
+      <div class="bg-white rounded-lg shadow-xl max-w-6xl w-full mx-4 max-h-[80vh] overflow-hidden">
+        <div class="p-4 border-b flex justify-between items-center">
+          <h2 class="text-xl font-semibold">Compare Versions ${version1.version} & ${version2.version}</h2>
+          <button class="text-gray-500 hover:text-gray-700 close-btn">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="p-4 overflow-y-auto max-h-96">
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <h3 class="font-semibold mb-2">Version ${version1.version}</h3>
+              <div class="prose max-w-none text-sm border rounded p-3 bg-red-50">
+                ${version1.content || 'No content'}
+              </div>
+            </div>
+            <div>
+              <h3 class="font-semibold mb-2">Version ${version2.version}</h3>
+              <div class="prose max-w-none text-sm border rounded p-3 bg-green-50">
+                ${version2.content || 'No content'}
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="p-4 border-t flex justify-end">
+          <button class="px-4 py-2 border rounded hover:bg-gray-50 close-btn">Close</button>
+        </div>
+      </div>
+    `;
     
+    document.body.appendChild(modal);
+    
+    modal.querySelectorAll('.close-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.body.removeChild(modal);
+      });
+    });
+    
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        document.body.removeChild(modal);
+      }
+    });
+  }
+
+  // Collaborators functionality
+  toggleCollaboratorMenu(collaboratorId: string) {
+    this.showCollaboratorMenu = this.showCollaboratorMenu === collaboratorId ? null : collaboratorId;
+  }
+
+  isValidEmail(email: string): boolean {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  }
+
+  addCollaborator() {
+    if (!this.isValidEmail(this.newCollaboratorEmail)) return;
+
+    // Check if collaborator already exists
+    const exists = this.allCollaborators.some(c => c.email === this.newCollaboratorEmail);
+    if (exists) {
+      alert('This person is already a collaborator');
+      return;
+    }
+
+    const newCollaborator: Collaborator = {
+      id: Date.now().toString(),
+      name: this.newCollaboratorEmail.split('@')[0], // Use email prefix as name
+      email: this.newCollaboratorEmail,
+      role: 'viewer',
+      isOnline: false,
+      status: 'Invited',
+      cursorColor: this.generateRandomColor(),
+      lastSeen: new Date()
+    };
+
+    this.allCollaborators.push(newCollaborator);
+    this.newCollaboratorEmail = '';
+    
+    // Show success message
+    console.log('Collaborator invited:', newCollaborator);
+  }
+
+  changeRole(collaborator: Collaborator) {
+    const newRole = prompt(`Change role for ${collaborator.name}:\n\nCurrent role: ${collaborator.role}\n\nEnter new role (owner/editor/viewer):`, collaborator.role);
+    if (newRole && ['owner', 'editor', 'viewer'].includes(newRole)) {
+      collaborator.role = newRole as 'owner' | 'editor' | 'viewer';
+      this.showCollaboratorMenu = null;
+    }
+  }
+
+  sendMessage(collaborator: Collaborator) {
+    const message = prompt(`Send a message to ${collaborator.name}:`);
+    if (message) {
+      console.log(`Message sent to ${collaborator.name}: ${message}`);
+      this.showCollaboratorMenu = null;
+    }
+  }
+
+  removeCollaborator(collaborator: Collaborator) {
+    if (confirm(`Remove ${collaborator.name} from this document?`)) {
+      const index = this.allCollaborators.findIndex(c => c.id === collaborator.id);
+      if (index > -1) {
+        this.allCollaborators.splice(index, 1);
+      }
+      
+      // Also remove from active collaborators if present
+      const activeIndex = this.activeCollaborators.findIndex(c => c.id === collaborator.id);
+      if (activeIndex > -1) {
+        this.activeCollaborators.splice(activeIndex, 1);
+      }
+      
+      this.showCollaboratorMenu = null;
+    }
+  }
+
+  private generateRandomColor(): string {
+    const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4', '#84CC16', '#F97316'];
+    return colors[Math.floor(Math.random() * colors.length)];
+  }
+
+  // Translation functionality
+  async translateDocument() {
+    if (!this.editor || !this.targetLanguage) return;
+
+    this.isTranslating = true;
+    this.translationStatus = {
+      type: 'info',
+      message: 'Starting translation...'
+    };
+
+    try {
+      // Get the document content
+      const content = this.getDocumentContent();
+      
+      if (!content.trim()) {
+        this.translationStatus = {
+          type: 'error',
+          message: 'No content to translate'
+        };
+        this.isTranslating = false;
+        return;
+      }
+
+      // Simulate translation API call
+      const translatedContent = await this.translateText(content, this.sourceLanguage, this.targetLanguage);
+      
+      if (this.translateInPlace) {
+        // Replace the content in the editor
+        if (this.preserveFormatting) {
+          // Try to preserve formatting by replacing text content while keeping structure
+          this.replaceTextPreservingFormat(translatedContent);
+        } else {
+          // Simple replacement
+          this.replaceDocumentContent(translatedContent);
+        }
+      } else {
+        // Insert translated content at the end
+        this.editor.chain()
+          .focus()
+          .setTextSelection(this.editor.state.doc.content.size)
+          .insertContent(`\n\n--- Translated to ${this.getLanguageName(this.targetLanguage)} ---\n\n${translatedContent}`)
+          .run();
+      }
+
+      this.translationStatus = {
+        type: 'success',
+        message: `Successfully translated to ${this.getLanguageName(this.targetLanguage)}`
+      };
+
+    } catch (error) {
+      console.error('Translation error:', error);
+      this.translationStatus = {
+        type: 'error',
+        message: 'Translation failed. Please try again.'
+      };
+    } finally {
+      this.isTranslating = false;
+      
+      // Clear status after 5 seconds
+      setTimeout(() => {
+        this.translationStatus = null;
+      }, 5000);
+    }
+  }
+
+  private async translateText(text: string, fromLang: string, toLang: string): Promise<string> {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    // Mock translation - in a real implementation, this would call a translation API
+    const mockTranslations: { [key: string]: string } = {
+      'es': 'Este es un texto traducido al español. La traducción mantiene el significado original del documento.',
+      'fr': 'Ceci est un texte traduit en français. La traduction conserve le sens original du document.',
+      'de': 'Dies ist ein ins Deutsche übersetzter Text. Die Übersetzung behält die ursprüngliche Bedeutung des Dokuments bei.',
+      'it': 'Questo è un testo tradotto in italiano. La traduzione mantiene il significato originale del documento.',
+      'pt': 'Este é um texto traduzido para o português. A tradução mantém o significado original do documento.',
+      'ru': 'Это текст, переведенный на русский язык. Перевод сохраняет первоначальный смысл документа.',
+      'ja': 'これは日本語に翻訳されたテキストです。翻訳は文書の元の意味を保持しています。',
+      'ko': '이것은 한국어로 번역된 텍스트입니다. 번역은 문서의 원래 의미를 유지합니다.',
+      'zh': '这是翻译成中文的文本。翻译保持了文档的原始含义。',
+      'ar': 'هذا نص مترجم إلى العربية. الترجمة تحافظ على المعنى الأصلي للوثيقة.'
+    };
+
+    // In a real implementation, you would call a translation API here
+    // For now, we'll create a more realistic mock that processes the actual text
+    return this.createMockTranslation(text, toLang, mockTranslations[toLang]);
+  }
+
+  private createMockTranslation(originalText: string, targetLang: string, sampleTranslation: string): string {
+    // Split the original text into sentences
+    const sentences = originalText.split(/[.!?]+/).filter(s => s.trim().length > 0);
+    
+    if (sentences.length === 0) {
+      return sampleTranslation || `[Translated to ${targetLang}] ${originalText}`;
+    }
+
+    // Create a mock translation by combining the sample with processed original text
+    const translatedSentences = sentences.map((sentence, index) => {
+      if (index === 0 && sampleTranslation) {
+        return sampleTranslation.split('.')[0] || sentence.trim();
+      }
+      return `[${targetLang.toUpperCase()}] ${sentence.trim()}`;
+    });
+
+    return translatedSentences.join('. ') + '.';
+  }
+
+  private getDocumentContent(): string {
+    if (!this.editor) return '';
+    
+    // Get the plain text content
+    return this.editor.getText();
+  }
+
+  private replaceDocumentContent(newContent: string) {
+    if (!this.editor) return;
+    
+    // Clear the document and insert new content
+    this.editor.chain()
+      .focus()
+      .clearContent()
+      .insertContent(newContent)
+      .run();
+  }
+
+  private replaceTextPreservingFormat(translatedText: string) {
+    if (!this.editor) return;
+
+    try {
+      // Get the current HTML content to preserve formatting
+      const htmlContent = this.editor.getHTML();
+      
+      // Extract text content while preserving structure
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = htmlContent;
+      
+      // Replace text content while keeping HTML structure
+      const textNodes = this.getTextNodes(tempDiv);
+      const originalText = this.editor.getText();
+      
+      if (originalText.trim()) {
+        // Simple approach: replace the entire content
+        // In a production app, you'd want more sophisticated text replacement
+        this.editor.chain()
+          .focus()
+          .selectAll()
+          .insertContent(translatedText)
+          .run();
+      }
+    } catch (error) {
+      console.error('Error preserving format:', error);
+      // Fallback to simple replacement
+      this.replaceDocumentContent(translatedText);
+    }
+  }
+
+  private getTextNodes(element: Element): Text[] {
+    const textNodes: Text[] = [];
+    const walker = document.createTreeWalker(
+      element,
+      NodeFilter.SHOW_TEXT,
+      null
+    );
+    
+    let node;
+    while (node = walker.nextNode()) {
+      if (node.textContent?.trim()) {
+        textNodes.push(node as Text);
+      }
+    }
+    
+    return textNodes;
+  }
+
+  getLanguageName(code: string): string {
+    const lang = this.supportedLanguages.find(l => l.code === code);
+    return lang ? lang.name : code;
+  }
+
+  // AI Writing Assistant functions
+  async improveWriting() {
+    await this.processWithAI('improve', 'Improving writing style and clarity...');
+  }
+
+  async fixGrammar() {
+    await this.processWithAI('grammar', 'Fixing grammar and spelling...');
+  }
+
+  async summarizeContent() {
+    await this.processWithAI('summarize', 'Creating summary...');
+  }
+
+  async changeTone() {
+    const tone = prompt('What tone would you like? (formal, casual, professional, friendly)');
+    if (tone) {
+      await this.processWithAI('tone', `Changing tone to ${tone}...`, tone);
+    }
+  }
+
+  async generateOutline() {
+    await this.processWithAI('outline', 'Generating document outline...');
+  }
+
+  async addConclusion() {
+    await this.processWithAI('conclusion', 'Adding conclusion...');
+  }
+
+  async expandContent() {
+    await this.processWithAI('expand', 'Expanding content...');
+  }
+
+  private async processWithAI(action: string, statusMessage: string, parameter?: string) {
+    if (!this.editor) return;
+
+    this.isProcessingAI = true;
+    this.translationStatus = {
+      type: 'info',
+      message: statusMessage
+    };
+
+    try {
+      const content = this.editor.getText();
+      const result = await this.mockAIProcess(action, content, parameter);
+      
+      // Insert the AI result
+      this.editor.chain()
+        .focus()
+        .setTextSelection(this.editor.state.doc.content.size)
+        .insertContent(`\n\n--- AI ${action.toUpperCase()} ---\n\n${result}`)
+        .run();
+
+      this.translationStatus = {
+        type: 'success',
+        message: `AI ${action} completed successfully`
+      };
+
+    } catch (error) {
+      console.error('AI processing error:', error);
+      this.translationStatus = {
+        type: 'error',
+        message: `AI ${action} failed. Please try again.`
+      };
+    } finally {
+      this.isProcessingAI = false;
+      
+      setTimeout(() => {
+        this.translationStatus = null;
+      }, 5000);
+    }
+  }
+
+  private async mockAIProcess(action: string, content: string, parameter?: string): Promise<string> {
+    // Simulate AI processing delay
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    const mockResults: { [key: string]: string } = {
+      'improve': 'Here is an improved version of your content with enhanced clarity, better word choice, and improved flow. The structure has been optimized for better readability.',
+      'grammar': 'Grammar and spelling have been corrected. All sentences now follow proper grammatical rules and spelling conventions.',
+      'summarize': 'Summary: This document discusses key concepts and provides important information. The main points include relevant details and actionable insights.',
+      'tone': `The content has been rewritten in a ${parameter || 'professional'} tone, adjusting the language style and word choice accordingly.`,
+      'outline': '1. Introduction\n2. Main Topic A\n   - Subtopic 1\n   - Subtopic 2\n3. Main Topic B\n   - Subtopic 1\n   - Subtopic 2\n4. Conclusion',
+      'conclusion': 'In conclusion, this document has covered the essential points and provided valuable insights. The information presented offers a comprehensive understanding of the topic and serves as a foundation for further exploration.',
+      'expand': 'This expanded version includes additional details, examples, and explanations to provide a more comprehensive understanding of the topic. Each point has been elaborated with supporting information and context.'
+    };
+
+    return mockResults[action] || `AI ${action} result for your content.`;
+  }
+
+  async askAI() {
+    if (!this.aiQuestion.trim()) return;
+
+    this.isProcessingAI = true;
+    const question = this.aiQuestion;
+    this.aiQuestion = '';
+
+    try {
+      // Simulate AI response delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Mock AI response
+      this.aiResponse = `Based on your question "${question}", here's what I can help you with: This is a helpful AI response that addresses your specific question about the document. I can provide suggestions, explanations, and guidance to improve your writing.`;
+
+    } catch (error) {
+      console.error('AI question error:', error);
+      this.aiResponse = 'Sorry, I encountered an error processing your question. Please try again.';
+    } finally {
+      this.isProcessingAI = false;
+    }
+  }
+}
