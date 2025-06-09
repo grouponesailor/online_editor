@@ -184,6 +184,10 @@ export class CommentsSidebarComponent {
   ];
 
   newCommentText: string = '';
+  
+  // AI functionality
+  isSummarizing: boolean = false;
+  aiSummary: string | null = null;
 
   setActiveTab(tabId: string) {
     this.activeTab = tabId;
@@ -308,5 +312,109 @@ export class CommentsSidebarComponent {
   private generateRandomColor(): string {
     const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4', '#84CC16', '#F97316'];
     return colors[Math.floor(Math.random() * colors.length)];
+  }
+
+  // AI functionality
+  async summarizeDocument() {
+    if (!this.editor) {
+      console.warn('No editor available for summarization');
+      return;
+    }
+
+    this.isSummarizing = true;
+    this.aiSummary = null;
+
+    try {
+      // Get document content
+      const documentText = this.editor.getText();
+      
+      if (!documentText.trim()) {
+        this.aiSummary = 'The document appears to be empty. Please add some content to generate a summary.';
+        return;
+      }
+
+      // Simulate AI processing delay
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // Generate a mock AI summary based on document content
+      this.aiSummary = this.generateMockSummary(documentText);
+      
+    } catch (error) {
+      console.error('Error generating summary:', error);
+      this.aiSummary = 'Sorry, there was an error generating the summary. Please try again later.';
+    } finally {
+      this.isSummarizing = false;
+    }
+  }
+
+  private generateMockSummary(text: string): string {
+    const wordCount = text.trim().split(/\s+/).length;
+    const paragraphCount = text.split('\n\n').filter(p => p.trim()).length;
+    
+    // Create a basic summary based on content analysis
+    const summaries = [
+      `This document contains ${wordCount} words across ${paragraphCount} paragraphs. The content appears to focus on collaborative document editing and real-time features. Key topics include user interface design, technical implementation, and feature documentation.`,
+      
+      `The document discusses a comprehensive collaborative editing platform with ${wordCount} words of content. Main themes include real-time collaboration, document management, and user experience optimization across ${paragraphCount} sections.`,
+      
+      `This ${wordCount}-word document outlines features and functionality for a modern document editor. The content spans ${paragraphCount} main sections covering collaboration tools, editing capabilities, and technical specifications.`,
+      
+      `The document presents a detailed overview of collaborative document editing features in ${wordCount} words. Key areas covered include real-time synchronization, user management, and advanced editing tools across ${paragraphCount} organized sections.`
+    ];
+    
+    // Select a random summary template
+    const baseSummary = summaries[Math.floor(Math.random() * summaries.length)];
+    
+    // Add content-specific insights if certain keywords are found
+    const insights = [];
+    if (text.toLowerCase().includes('collaboration')) {
+      insights.push('The document emphasizes collaborative features and team-based editing.');
+    }
+    if (text.toLowerCase().includes('real-time')) {
+      insights.push('Real-time synchronization is a central theme throughout the content.');
+    }
+    if (text.toLowerCase().includes('user') || text.toLowerCase().includes('interface')) {
+      insights.push('User experience and interface design are important considerations.');
+    }
+    if (text.toLowerCase().includes('feature') || text.toLowerCase().includes('functionality')) {
+      insights.push('The document details various features and their implementation.');
+    }
+    
+    let finalSummary = baseSummary;
+    if (insights.length > 0) {
+      finalSummary += ' ' + insights.join(' ');
+    }
+    
+    return finalSummary;
+  }
+
+  async copyToClipboard(text: string) {
+    try {
+      await navigator.clipboard.writeText(text);
+      // Show temporary success message
+      console.log('Summary copied to clipboard');
+    } catch (error) {
+      console.error('Failed to copy to clipboard:', error);
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+    }
+  }
+
+  insertSummaryIntoDocument() {
+    if (!this.editor || !this.aiSummary) return;
+
+    // Insert the summary at the current cursor position
+    this.editor.chain()
+      .focus()
+      .insertContent(`\n\n**AI Summary:**\n${this.aiSummary}\n\n`)
+      .run();
+
+    // Close the summary
+    this.aiSummary = null;
   }
 }
