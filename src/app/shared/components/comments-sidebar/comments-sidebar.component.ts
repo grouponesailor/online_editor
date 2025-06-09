@@ -458,7 +458,7 @@ export class CommentsSidebarComponent {
 
     try {
       // Get the document content
-      const content = this.editor.getText();
+      const content = this.getDocumentContent();
       
       if (!content.trim()) {
         this.translationStatus = {
@@ -470,7 +470,7 @@ export class CommentsSidebarComponent {
       }
 
       // Simulate translation API call
-      const translatedContent = await this.mockTranslateText(content, this.sourceLanguage, this.targetLanguage);
+      const translatedContent = await this.translateText(content, this.sourceLanguage, this.targetLanguage);
       
       if (this.translateInPlace) {
         // Replace the content in the editor
@@ -479,7 +479,7 @@ export class CommentsSidebarComponent {
           this.replaceTextPreservingFormat(translatedContent);
         } else {
           // Simple replacement
-          this.editor.commands.setContent(translatedContent);
+          this.replaceDocumentContent(translatedContent);
         }
       } else {
         // Insert translated content at the end
@@ -511,7 +511,7 @@ export class CommentsSidebarComponent {
     }
   }
 
-  private async mockTranslateText(text: string, fromLang: string, toLang: string): Promise<string> {
+  private async translateText(text: string, fromLang: string, toLang: string): Promise<string> {
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 2000));
     
@@ -529,19 +529,95 @@ export class CommentsSidebarComponent {
       'ar': 'هذا نص مترجم إلى العربية. الترجمة تحافظ على المعنى الأصلي للوثيقة.'
     };
 
-    return mockTranslations[toLang] || `[Translated to ${toLang}] ${text}`;
+    // In a real implementation, you would call a translation API here
+    // For now, we'll create a more realistic mock that processes the actual text
+    return this.createMockTranslation(text, toLang, mockTranslations[toLang]);
+  }
+
+  private createMockTranslation(originalText: string, targetLang: string, sampleTranslation: string): string {
+    // Split the original text into sentences
+    const sentences = originalText.split(/[.!?]+/).filter(s => s.trim().length > 0);
+    
+    if (sentences.length === 0) {
+      return sampleTranslation || `[Translated to ${targetLang}] ${originalText}`;
+    }
+
+    // Create a mock translation by combining the sample with processed original text
+    const translatedSentences = sentences.map((sentence, index) => {
+      if (index === 0 && sampleTranslation) {
+        return sampleTranslation.split('.')[0] || sentence.trim();
+      }
+      return `[${targetLang.toUpperCase()}] ${sentence.trim()}`;
+    });
+
+    return translatedSentences.join('. ') + '.';
+  }
+
+  private getDocumentContent(): string {
+    if (!this.editor) return '';
+    
+    // Get the plain text content
+    return this.editor.getText();
+  }
+
+  private replaceDocumentContent(newContent: string) {
+    if (!this.editor) return;
+    
+    // Clear the document and insert new content
+    this.editor.chain()
+      .focus()
+      .clearContent()
+      .insertContent(newContent)
+      .run();
   }
 
   private replaceTextPreservingFormat(translatedText: string) {
     if (!this.editor) return;
 
-    // Get the current document structure
-    const doc = this.editor.state.doc;
+    try {
+      // Get the current HTML content to preserve formatting
+      const htmlContent = this.editor.getHTML();
+      
+      // Extract text content while preserving structure
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = htmlContent;
+      
+      // Replace text content while keeping HTML structure
+      const textNodes = this.getTextNodes(tempDiv);
+      const originalText = this.editor.getText();
+      
+      if (originalText.trim()) {
+        // Simple approach: replace the entire content
+        // In a production app, you'd want more sophisticated text replacement
+        this.editor.chain()
+          .focus()
+          .selectAll()
+          .insertContent(translatedText)
+          .run();
+      }
+    } catch (error) {
+      console.error('Error preserving format:', error);
+      // Fallback to simple replacement
+      this.replaceDocumentContent(translatedText);
+    }
+  }
+
+  private getTextNodes(element: Element): Text[] {
+    const textNodes: Text[] = [];
+    const walker = document.createTreeWalker(
+      element,
+      NodeFilter.SHOW_TEXT,
+      null
+    );
     
-    // For now, simple replacement - in a real implementation, 
-    // you'd want to traverse the document tree and replace text nodes
-    // while preserving formatting marks and structure
-    this.editor.commands.setContent(translatedText);
+    let node;
+    while (node = walker.nextNode()) {
+      if (node.textContent?.trim()) {
+        textNodes.push(node as Text);
+      }
+    }
+    
+    return textNodes;
   }
 
   private getLanguageName(code: string): string {

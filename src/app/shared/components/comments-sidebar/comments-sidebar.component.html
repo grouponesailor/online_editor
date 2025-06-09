@@ -153,7 +153,7 @@
             <label class="block text-xs text-gray-600 mb-1">From Language</label>
             <select
               [(ngModel)]="sourceLanguage"
-              class="w-full text-sm border border-gray-300 rounded px-2 py-1 focus:border-[#6200EE] focus:ring-1 focus:ring-[#6200EE]">
+              class="w-full text-sm border border-gray-300 rounded px-2 py-1.5 focus:border-[#6200EE] focus:ring-1 focus:ring-[#6200EE]">
               <option value="auto">Auto-detect</option>
               <option *ngFor="let lang of supportedLanguages" [value]="lang.code">
                 {{ lang.name }}
@@ -165,7 +165,7 @@
             <label class="block text-xs text-gray-600 mb-1">To Language</label>
             <select
               [(ngModel)]="targetLanguage"
-              class="w-full text-sm border border-gray-300 rounded px-2 py-1 focus:border-[#6200EE] focus:ring-1 focus:ring-[#6200EE]">
+              class="w-full text-sm border border-gray-300 rounded px-2 py-1.5 focus:border-[#6200EE] focus:ring-1 focus:ring-[#6200EE]">
               <option *ngFor="let lang of supportedLanguages" [value]="lang.code">
                 {{ lang.name }}
               </option>
@@ -188,6 +188,9 @@
                 class="mr-2 rounded border-gray-300 text-[#6200EE] focus:ring-[#6200EE]">
               Replace original text
             </label>
+            <p class="text-xs text-gray-500 mt-1">
+              {{ translateInPlace ? 'Original text will be replaced with translation' : 'Translation will be added at the end of the document' }}
+            </p>
           </div>
           
           <!-- Translate Button -->
@@ -199,6 +202,15 @@
             <i *ngIf="isTranslating" class="fas fa-spinner fa-spin mr-2"></i>
             {{ isTranslating ? 'Translating...' : 'Translate Document' }}
           </button>
+          
+          <!-- Quick Language Buttons -->
+          <div class="flex gap-1 mt-2">
+            <button *ngFor="let lang of ['es', 'fr', 'de', 'zh', 'ja']" 
+                    class="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded transition-colors"
+                    (click)="targetLanguage = lang; translateDocument()">
+              {{ getLanguageName(lang) }}
+            </button>
+          </div>
         </div>
         
         <!-- Translation Status -->
