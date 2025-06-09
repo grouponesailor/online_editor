@@ -101,6 +101,83 @@ src/app/
    ng build --prod
    ```
 
+## 🧪 Testing
+
+The project includes comprehensive test automation for all AI functionality:
+
+### Running Tests
+
+1. **Run all tests**:
+   ```bash
+   npm test
+   ```
+
+2. **Run tests with coverage**:
+   ```bash
+   npm run test:coverage
+   ```
+
+3. **Run tests in CI mode**:
+   ```bash
+   npm run test:ci
+   ```
+
+4. **Run E2E tests**:
+   ```bash
+   npm run e2e
+   ```
+
+5. **Watch mode for development**:
+   ```bash
+   npm run test:watch
+   ```
+
+### Test Coverage
+
+The AI section includes comprehensive test automation covering:
+
+- **Unit Tests**: Individual component and service testing
+- **Integration Tests**: Component interaction and workflow testing
+- **E2E Tests**: Complete user journey testing
+- **Error Handling**: Network failures, API errors, edge cases
+- **Performance Tests**: Large documents, rapid interactions
+- **Accessibility Tests**: Keyboard navigation, screen reader support
+
+#### AI Service Tests (`ai.service.spec.ts`)
+- API integration with Hugging Face
+- Fallback model handling
+- Text truncation and processing
+- Error handling and recovery
+- Service health checks
+
+#### Comments Sidebar Tests (`comments-sidebar.component.spec.ts`)
+- AI summarization workflow
+- User interface interactions
+- State management
+- Clipboard operations
+- Document insertion
+
+#### Integration Tests (`comments-sidebar.component.integration.spec.ts`)
+- Full workflow testing
+- Tab navigation
+- Error state handling
+- Performance optimization
+
+#### E2E Tests (`comments-sidebar.component.e2e.spec.ts`)
+- Complete user journeys
+- Multi-step workflows
+- Cross-browser compatibility
+- Accessibility compliance
+
+### Test Configuration
+
+Tests are configured with:
+- **Karma**: Test runner
+- **Jasmine**: Testing framework
+- **Coverage reporting**: HTML and LCOV formats
+- **CI/CD support**: Headless Chrome for automated testing
+- **Mock services**: Comprehensive mocking for external dependencies
+
 ## 🖥️ Server Setup (Optional)
 
 For real-time collaboration, you can run the included WebSocket server:
