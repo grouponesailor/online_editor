@@ -86,11 +86,22 @@ export class FileService {
   private saveMockDocumentsToStorage() {
     try {
       const savedDocsKey = 'saved_documents_list';
-      // Only save user-created documents (not the initial mock ones)
-      const userDocs = this.mockDocuments.filter(doc => 
-        doc.id.startsWith('doc') && parseInt(doc.id.replace('doc', '')) > 1000000000000
-      );
+      // Save all documents that are not the initial mock ones
+      const userDocs = this.mockDocuments.filter(doc => {
+        // Keep documents that start with 'new-' (from createNewDocument)
+        if (doc.id.startsWith('new-')) {
+          return true;
+        }
+        // Keep documents that are user-created (high timestamp IDs)
+        if (doc.id.startsWith('doc') && parseInt(doc.id.replace('doc', '')) > 1000000000000) {
+          return true;
+        }
+        // Keep any document that doesn't match the original mock pattern
+        const originalMockIds = ['doc1', 'doc2', 'doc3', 'doc4', 'doc5'];
+        return !originalMockIds.includes(doc.id);
+      });
       localStorage.setItem(savedDocsKey, JSON.stringify(userDocs));
+      console.log('Saved documents to localStorage:', userDocs);
     } catch (error) {
       console.error('Failed to save documents to storage:', error);
     }
@@ -282,6 +293,7 @@ export class FileService {
     if (existingIndex > -1) {
       // Update existing document
       this.mockDocuments[existingIndex].lastModified = new Date();
+      this.mockDocuments[existingIndex].size = this.estimateDocumentSize(documentId);
       if (documentName && documentName.trim()) {
         this.mockDocuments[existingIndex].name = documentName.trim();
       }
@@ -297,6 +309,7 @@ export class FileService {
         collaborators: []
       };
       this.mockDocuments.unshift(newDoc);
+      console.log('Added new document to list:', newDoc);
     }
     
     // Save updated list to localStorage

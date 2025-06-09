@@ -31,12 +31,18 @@ export class FileManagerComponent implements OnInit {
     this.loadDocuments();
     this.loadRecentDocuments();
     this.loadTemplates();
+    
+    // Refresh documents every few seconds to catch new saves
+    setInterval(() => {
+      this.loadDocuments();
+    }, 3000);
   }
 
   loadDocuments() {
     this.fileService.getDocuments().subscribe(
       (documents: DocumentFile[]) => {
         this.documents = documents;
+        console.log('Loaded documents in File Manager:', documents);
       }
     );
   }
