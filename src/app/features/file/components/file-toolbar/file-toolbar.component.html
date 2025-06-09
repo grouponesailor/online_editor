@@ -90,9 +90,12 @@
   <div class="flex gap-1 border-r pr-2">
     <button
       (click)="onShare()"
-      class="bg-[#6200EE] text-white px-4 py-2 rounded-md hover:bg-[#5000CC] transition-colors"
+      class="p-2 rounded hover:bg-gray-100 hover:text-[#6200EE] transition-colors"
       title="Share Document">
-      Share
+      <svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M16 22V10M16 10l-6 6M16 10l6 6"/>
+        <rect x="6" y="22" width="20" height="4" rx="2"/>
+      </svg>
     </button>
   </div>
 
