@@ -267,25 +267,28 @@
       </div>
     </div>
 
-    <!-- Shapes -->
+    <!-- Diagrams & Charts -->
     <div class="flex gap-1 border-r pr-2">
       <div class="relative">
         <button
           class="p-2 rounded hover:bg-gray-100 hover:text-[#6200EE] transition-colors flex items-center"
-          (click)="showShapesMenu = !showShapesMenu"
-          title="Insert Shape">
-          <i class="fas fa-shapes"></i>
+          (click)="showDiagramsMenu = !showDiagramsMenu"
+          title="Insert Diagram or Chart">
+          <i class="fas fa-project-diagram"></i>
           <i class="fas fa-chevron-down ml-1"></i>
         </button>
-        <div *ngIf="showShapesMenu" class="absolute top-full left-0 mt-1 bg-white shadow-lg rounded py-1 z-50 w-48">
-          <button
-            *ngFor="let shape of shapes"
-            class="block w-full px-4 py-2 text-left hover:bg-gray-100 text-sm flex items-center"
-            (click)="insertShape(shape)">
-            <svg class="w-5 h-5 mr-2" viewBox="0 0 24 24">
-              <path [attr.d]="shape.svgPath" fill="none" stroke="currentColor" stroke-width="1.5"/>
-            </svg>
-            {{ shape.name }}
+        <div *ngIf="showDiagramsMenu" class="absolute top-full left-0 mt-1 bg-white shadow-lg rounded py-1 z-50 w-48">
+          <button class="block w-full px-4 py-2 text-left hover:bg-gray-100 text-sm flex items-center">
+            <i class="fas fa-project-diagram mr-2"></i>Flowchart
+          </button>
+          <button class="block w-full px-4 py-2 text-left hover:bg-gray-100 text-sm flex items-center">
+            <i class="fas fa-chart-pie mr-2"></i>Pie Chart
+          </button>
+          <button class="block w-full px-4 py-2 text-left hover:bg-gray-100 text-sm flex items-center">
+            <i class="fas fa-chart-bar mr-2"></i>Bar Chart
+          </button>
+          <button class="block w-full px-4 py-2 text-left hover:bg-gray-100 text-sm flex items-center">
+            <i class="fas fa-chart-line mr-2"></i>Line Chart
           </button>
         </div>
       </div>

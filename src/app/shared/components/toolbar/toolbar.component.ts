@@ -73,6 +73,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, OnChanges {
   showListMenu = false;
   showShapesMenu = false;
   showSignatureMenu = false;
+  showDiagramsMenu = false;
   formatPainterActive = false;
   selectedImage: any = null;
   showLinkDialog = false;
@@ -374,37 +375,37 @@ export class ToolbarComponent implements OnInit, OnDestroy, OnChanges {
     {
       id: 'rectangle',
       name: 'Rectangle',
-      svgPath: 'M2 2h20v20H2z'
+      svgPath: 'shape-rectangle'
     },
     {
       id: 'circle',
       name: 'Circle',
-      svgPath: 'M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z'
+      svgPath: 'shape-circle'
     },
     {
       id: 'triangle',
       name: 'Triangle',
-      svgPath: 'M12 2L22 22H2L12 2z'
+      svgPath: 'shape-triangle'
     },
     {
       id: 'star',
       name: 'Star',
-      svgPath: 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z'
+      svgPath: 'shape-star'
     },
     {
       id: 'hexagon',
       name: 'Hexagon',
-      svgPath: 'M12 2l8.66 5v10L12 22l-8.66-5V7L12 2z'
+      svgPath: 'shape-hexagon'
     },
     {
       id: 'diamond',
       name: 'Diamond',
-      svgPath: 'M12 2L22 12L12 22L2 12L12 2z'
+      svgPath: 'shape-diamond'
     },
     {
       id: 'cloud',
       name: 'Cloud',
-      svgPath: 'M5.5 16a3.5 3.5 0 0 1-.369-6.98 4 4 0 1 1 7.753-1.977A4.5 4.5 0 1 1 15.5 16h-10z'
+      svgPath: 'shape-cloud'
     }
   ];
 
@@ -709,12 +710,6 @@ export class ToolbarComponent implements OnInit, OnDestroy, OnChanges {
   insertShape(shape: ShapeDefinition) {
     if (!this.editor) return;
 
-    console.log('Shape definition:', {
-      id: shape.id,
-      svgPath: shape.svgPath,
-      fullShape: shape
-    });
-    
     try {
       this.editor.chain()
         .focus()
@@ -723,7 +718,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, OnChanges {
           svgPath: shape.svgPath
         })
         .run();
-      console.log('Shape insertion completed');
+      this.showShapesMenu = false;
     } catch (error) {
       console.error('Error inserting shape:', error);
     }

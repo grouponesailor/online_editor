@@ -6,6 +6,7 @@ import { ToolbarComponent } from './components/toolbar/toolbar.component';
 import { ShareDialogComponent } from './components/share-dialog/share-dialog.component';
 import { ImageEditDialogComponent } from './components/image-edit-dialog/image-edit-dialog.component';
 import { CommentsSidebarComponent } from './components/comments-sidebar/comments-sidebar.component';
+import { SafeHtmlPipe } from './pipes/safe-html.pipe';
 
 // Import File Module components
 import { FileModule } from '../features/file/file.module';
@@ -15,7 +16,8 @@ import { FileModule } from '../features/file/file.module';
     ToolbarComponent,
     ShareDialogComponent,
     ImageEditDialogComponent,
-    CommentsSidebarComponent
+    CommentsSidebarComponent,
+    SafeHtmlPipe
   ],
   imports: [
     CommonModule,
@@ -28,7 +30,8 @@ import { FileModule } from '../features/file/file.module';
     ToolbarComponent,
     ShareDialogComponent,
     ImageEditDialogComponent,
-    CommentsSidebarComponent
+    CommentsSidebarComponent,
+    SafeHtmlPipe
   ]
 })
 export class SharedModule { }
