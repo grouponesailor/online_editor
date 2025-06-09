@@ -276,7 +276,7 @@
 
     <!-- Image -->
     <div class="flex gap-1 border-r pr-2">
-      <div class="relative">
+      <div class="relative dropdown-container">
         <button
           class="p-2 rounded hover:bg-gray-100 hover:text-[#6200EE] transition-colors flex items-center"
           (click)="showImageMenu = !showImageMenu"
@@ -284,7 +284,7 @@
           <i class="fas fa-image"></i>
           <i class="fas fa-chevron-down ml-1"></i>
         </button>
-        <div *ngIf="showImageMenu" class="absolute top-full left-0 mt-1 bg-white shadow-lg rounded py-1 z-50 w-48">
+        <div *ngIf="showImageMenu" class="absolute top-full left-0 mt-1 bg-white shadow-lg rounded-lg py-2 z-50 w-48">
           <button
             class="block w-full px-4 py-2 text-left hover:bg-gray-100 hover:text-[#6200EE] transition-colors"
             (click)="uploadImage()">
