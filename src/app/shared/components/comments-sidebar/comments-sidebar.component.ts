@@ -854,3 +854,8 @@ export class CommentsSidebarComponent implements OnInit, OnChanges {
       const success = this.restoreVersionContent(this.documentId, version.id);
       if (success) {
         alert(`Successfully restored to version ${
+        )
+      }
+    }
+  }
+}
