@@ -59,9 +59,17 @@ export class CommentsSidebarComponent {
   @Input() editor: Editor | null = null;
   @Input() documentId: string = '';
 
+  // Version history service
+  private versionHistoryService = {
+    getVersions: (docId: string) => this.getStoredVersions(docId),
+    saveVersion: (docId: string, content: string, description?: string) => this.saveNewVersion(docId, content, description),
+    restoreVersion: (docId: string, versionId: string) => this.restoreVersionContent(docId, versionId)
+  };
+
   activeTab: string = 'comments';
   showCollaboratorMenu: string | null = null;
   newCollaboratorEmail: string = '';
+  showVersionMenu: string | null = null;
 
   // AI Tab properties
   sourceLanguage: string = 'auto';
@@ -227,30 +235,7 @@ export class CommentsSidebarComponent {
   ];
 
   versionHistory: VersionHistory[] = [
-    {
-      id: 'v1',
-      version: 3,
-      author: 'Current User',
-      timestamp: new Date(),
-      description: 'Added new section on collaboration features',
-      changes: ['Added collaboration section', 'Updated introduction', 'Fixed typos']
-    },
-    {
-      id: 'v2',
-      version: 2,
-      author: 'Jane Smith',
-      timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-      description: 'Updated formatting and added images',
-      changes: ['Improved formatting', 'Added screenshots', 'Updated table of contents']
-    },
-    {
-      id: 'v3',
-      version: 1,
-      author: 'John Doe',
-      timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000),
-      description: 'Initial document creation',
-      changes: ['Created document structure', 'Added initial content', 'Set up basic formatting']
-    }
+    // Will be loaded from localStorage
   ];
 
   activeCollaborators: Collaborator[] = [
@@ -321,6 +306,212 @@ export class CommentsSidebarComponent {
 
   newCommentText: string = '';
 
+  saveManualVersion() {
+    const description = prompt('Enter a description for this version (optional):');
+    if (description !== null) { // User didn't cancel
+      const version = this.saveVersion(description || 'Manual save');
+      if (version) {
+        alert(`Version ${version.version} saved successfully!`);
+      }
+    }
+  }
+
+  getVersionSize(version: VersionHistory): string {
+    if (!version.content) return '0 KB';
+    const bytes = new Blob([version.content]).size;
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
+  ngOnInit() {
+    // Load version history when component initializes
+    this.loadVersionHistory();
+    
+    // Listen for editor changes to auto-save versions
+    if (this.editor) {
+      this.setupAutoVersioning();
+    }
+  }
+
+  ngOnChanges() {
+    if (this.editor) {
+      this.setupAutoVersioning();
+    }
+  }
+
+  private setupAutoVersioning() {
+    if (!this.editor) return;
+
+    // Listen for significant changes (debounced)
+    let saveTimeout: any;
+    this.editor.on('update', () => {
+      clearTimeout(saveTimeout);
+      saveTimeout = setTimeout(() => {
+        this.autoSaveVersion();
+      }, 30000); // Auto-save version every 30 seconds of inactivity
+    });
+  }
+
+  private loadVersionHistory() {
+    this.versionHistory = this.getStoredVersions(this.documentId);
+  }
+
+  private getStoredVersions(docId: string): VersionHistory[] {
+    try {
+      const storageKey = `doc-versions-${docId}`;
+      const stored = localStorage.getItem(storageKey);
+      if (stored) {
+        const versions = JSON.parse(stored);
+        return versions.map((v: any) => ({
+          ...v,
+          timestamp: new Date(v.timestamp)
+        }));
+      }
+    } catch (error) {
+      console.error('Error loading version history:', error);
+    }
+    
+    // Return default initial version if none exists
+    return [{
+      id: `v-${Date.now()}`,
+      version: 1,
+      author: 'Current User',
+      timestamp: new Date(),
+      description: 'Initial document creation',
+      changes: ['Document created'],
+      content: this.editor?.getHTML() || ''
+    }];
+  }
+
+  private saveNewVersion(docId: string, content: string, description?: string): VersionHistory {
+    const versions = this.getStoredVersions(docId);
+    const nextVersion = Math.max(...versions.map(v => v.version), 0) + 1;
+    
+    const newVersion: VersionHistory = {
+      id: `v-${Date.now()}`,
+      version: nextVersion,
+      author: 'Current User', // In a real app, get from auth service
+      timestamp: new Date(),
+      description: description || `Auto-save version ${nextVersion}`,
+      changes: this.detectChanges(versions[0]?.content || '', content),
+      content: content
+    };
+
+    // Add to beginning of array (newest first)
+    versions.unshift(newVersion);
+    
+    // Keep only last 50 versions to prevent storage bloat
+    const trimmedVersions = versions.slice(0, 50);
+    
+    // Save to localStorage
+    try {
+      const storageKey = `doc-versions-${docId}`;
+      localStorage.setItem(storageKey, JSON.stringify(trimmedVersions));
+      
+      // Update component state
+      this.versionHistory = trimmedVersions;
+      
+      console.log(`Saved version ${nextVersion} for document ${docId}`);
+    } catch (error) {
+      console.error('Error saving version:', error);
+    }
+
+    return newVersion;
+  }
+
+  private detectChanges(oldContent: string, newContent: string): string[] {
+    const changes: string[] = [];
+    
+    // Simple change detection
+    const oldLength = oldContent.length;
+    const newLength = newContent.length;
+    
+    if (newLength > oldLength) {
+      const diff = newLength - oldLength;
+      changes.push(`Added ${diff} characters`);
+    } else if (newLength < oldLength) {
+      const diff = oldLength - newLength;
+      changes.push(`Removed ${diff} characters`);
+    }
+    
+    // Count words
+    const oldWords = oldContent.split(/\s+/).filter(w => w.length > 0).length;
+    const newWords = newContent.split(/\s+/).filter(w => w.length > 0).length;
+    
+    if (newWords !== oldWords) {
+      const wordDiff = newWords - oldWords;
+      if (wordDiff > 0) {
+        changes.push(`Added ${wordDiff} words`);
+      } else {
+        changes.push(`Removed ${Math.abs(wordDiff)} words`);
+      }
+    }
+    
+    // Detect structural changes
+    const oldHeadings = (oldContent.match(/<h[1-6]/g) || []).length;
+    const newHeadings = (newContent.match(/<h[1-6]/g) || []).length;
+    
+    if (newHeadings !== oldHeadings) {
+      changes.push(`Modified headings`);
+    }
+    
+    const oldImages = (oldContent.match(/<img/g) || []).length;
+    const newImages = (newContent.match(/<img/g) || []).length;
+    
+    if (newImages !== oldImages) {
+      changes.push(`Modified images`);
+    }
+    
+    const oldTables = (oldContent.match(/<table/g) || []).length;
+    const newTables = (newContent.match(/<table/g) || []).length;
+    
+    if (newTables !== oldTables) {
+      changes.push(`Modified tables`);
+    }
+    
+    return changes.length > 0 ? changes : ['Content modified'];
+  }
+
+  private autoSaveVersion() {
+    if (!this.editor) return;
+    
+    const content = this.editor.getHTML();
+    const currentVersions = this.getStoredVersions(this.documentId);
+    
+    // Only save if content has actually changed
+    if (currentVersions.length > 0 && currentVersions[0].content === content) {
+      return;
+    }
+    
+    this.saveNewVersion(this.documentId, content, 'Auto-save');
+  }
+
+  // Public method to manually save a version (called from save operations)
+  public saveVersion(description?: string) {
+    if (!this.editor) return;
+    
+    const content = this.editor.getHTML();
+    return this.saveNewVersion(this.documentId, content, description || 'Manual save');
+  }
+
+  private restoreVersionContent(docId: string, versionId: string): boolean {
+    const versions = this.getStoredVersions(docId);
+    const version = versions.find(v => v.id === versionId);
+    
+    if (!version || !this.editor) {
+      return false;
+    }
+    
+    // Set the editor content to the version content
+    this.editor.commands.setContent(version.content);
+    
+    // Save this as a new version (restoration)
+    this.saveNewVersion(docId, version.content, `Restored to version ${version.version}`);
+    
+    return true;
+  }
+
   setActiveTab(tabId: string) {
     this.activeTab = tabId;
     this.showCollaboratorMenu = null; // Close any open menus
@@ -360,14 +551,142 @@ export class CommentsSidebarComponent {
   // Version history functionality
   viewVersion(version: VersionHistory) {
     console.log('View version:', version);
-    // Implement version viewing functionality
+    
+    // Show version content in a modal or preview
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+    modal.innerHTML = `
+      <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[80vh] overflow-hidden">
+        <div class="p-4 border-b flex justify-between items-center">
+          <h2 class="text-xl font-semibold">Version ${version.version} Preview</h2>
+          <button class="text-gray-500 hover:text-gray-700 close-btn">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="p-4 border-b bg-gray-50">
+          <div class="flex items-center gap-4 text-sm text-gray-600">
+            <span><i class="fas fa-user mr-1"></i> ${version.author}</span>
+            <span><i class="fas fa-clock mr-1"></i> ${version.timestamp.toLocaleString()}</span>
+            <span><i class="fas fa-tag mr-1"></i> ${version.description}</span>
+          </div>
+          <div class="mt-2">
+            <strong>Changes:</strong> ${version.changes.join(', ')}
+          </div>
+        </div>
+        <div class="p-4 overflow-y-auto max-h-96">
+          <div class="prose max-w-none">${version.content || 'No content available'}</div>
+        </div>
+        <div class="p-4 border-t flex justify-end gap-2">
+          <button class="px-4 py-2 border rounded hover:bg-gray-50 close-btn">Close</button>
+          <button class="px-4 py-2 bg-[#6200EE] text-white rounded hover:bg-[#5000CC] restore-btn">
+            Restore This Version
+          </button>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Add event listeners
+    modal.querySelectorAll('.close-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.body.removeChild(modal);
+      });
+    });
+    
+    modal.querySelector('.restore-btn')?.addEventListener('click', () => {
+      this.restoreVersion(version);
+      document.body.removeChild(modal);
+    });
+    
+    // Close on backdrop click
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        document.body.removeChild(modal);
+      }
+    });
   }
 
   restoreVersion(version: VersionHistory) {
     if (confirm(`Are you sure you want to restore to version ${version.version}? This will overwrite current changes.`)) {
-      console.log('Restore version:', version);
-      // Implement version restoration functionality
+      const success = this.restoreVersionContent(this.documentId, version.id);
+      if (success) {
+        alert(`Successfully restored to version ${version.version}`);
+      } else {
+        alert('Failed to restore version. Please try again.');
+      }
     }
+  }
+
+  deleteVersion(version: VersionHistory) {
+    if (version.version === 1) {
+      alert('Cannot delete the initial version');
+      return;
+    }
+    
+    if (confirm(`Are you sure you want to delete version ${version.version}?`)) {
+      const versions = this.getStoredVersions(this.documentId);
+      const filteredVersions = versions.filter(v => v.id !== version.id);
+      
+      try {
+        const storageKey = `doc-versions-${this.documentId}`;
+        localStorage.setItem(storageKey, JSON.stringify(filteredVersions));
+        this.versionHistory = filteredVersions;
+        console.log(`Deleted version ${version.version}`);
+      } catch (error) {
+        console.error('Error deleting version:', error);
+        alert('Failed to delete version');
+      }
+    }
+  }
+
+  compareVersions(version1: VersionHistory, version2: VersionHistory) {
+    // Simple comparison - in a real app, you'd use a proper diff library
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+    modal.innerHTML = `
+      <div class="bg-white rounded-lg shadow-xl max-w-6xl w-full mx-4 max-h-[80vh] overflow-hidden">
+        <div class="p-4 border-b flex justify-between items-center">
+          <h2 class="text-xl font-semibold">Compare Versions ${version1.version} & ${version2.version}</h2>
+          <button class="text-gray-500 hover:text-gray-700 close-btn">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="p-4 overflow-y-auto max-h-96">
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <h3 class="font-semibold mb-2">Version ${version1.version}</h3>
+              <div class="prose max-w-none text-sm border rounded p-3 bg-red-50">
+                ${version1.content || 'No content'}
+              </div>
+            </div>
+            <div>
+              <h3 class="font-semibold mb-2">Version ${version2.version}</h3>
+              <div class="prose max-w-none text-sm border rounded p-3 bg-green-50">
+                ${version2.content || 'No content'}
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="p-4 border-t flex justify-end">
+          <button class="px-4 py-2 border rounded hover:bg-gray-50 close-btn">Close</button>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    modal.querySelectorAll('.close-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.body.removeChild(modal);
+      });
+    });
+    
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        document.body.removeChild(modal);
+      }
+    });
   }
 
   // Collaborators functionality

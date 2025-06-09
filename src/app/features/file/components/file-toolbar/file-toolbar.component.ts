@@ -68,6 +68,9 @@ export class FileToolbarComponent {
       (success: boolean) => {
         if (success) {
           this.showSaveNotification('Document saved locally and added to File Manager');
+          
+          // Trigger version save in comments sidebar if available
+          this.triggerVersionSave();
         } else {
           this.showSaveNotification('Failed to save document', 'error');
         }
@@ -76,6 +79,14 @@ export class FileToolbarComponent {
     
     // Also emit the save event for parent components
     this.saveDocument.emit();
+  }
+
+  private triggerVersionSave() {
+    // Emit a custom event that the editor component can listen to
+    const event = new CustomEvent('documentSaved', {
+      detail: { documentId: this.documentId, timestamp: new Date() }
+    });
+    window.dispatchEvent(event);
   }
 
   private showSaveNotification(message: string, type: 'success' | 'error' = 'success') {

@@ -119,17 +119,61 @@
                 <div class="text-xs text-gray-500">{{ version.timestamp | date:'short' }}</div>
               </div>
             </div>
-            <span class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">v{{ version.version }}</span>
+            <div class="flex items-center gap-2">
+              <span class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">v{{ version.version }}</span>
+              <div class="relative">
+                <button class="text-gray-400 hover:text-gray-600 p-1" (click)="showVersionMenu = showVersionMenu === version.id ? null : version.id">
+                  <i class="fas fa-ellipsis-v text-xs"></i>
+                </button>
+                <div *ngIf="showVersionMenu === version.id" class="absolute right-0 top-6 bg-white shadow-lg rounded border py-1 z-10 w-32">
+                  <button class="block w-full px-3 py-1 text-left text-xs hover:bg-gray-100" (click)="viewVersion(version); showVersionMenu = null">
+                    <i class="fas fa-eye mr-1"></i> Preview
+                  </button>
+                  <button *ngIf="i > 0" class="block w-full px-3 py-1 text-left text-xs hover:bg-gray-100" (click)="restoreVersion(version); showVersionMenu = null">
+                    <i class="fas fa-undo mr-1"></i> Restore
+                  </button>
+                  <button *ngIf="i < versionHistory.length - 1" class="block w-full px-3 py-1 text-left text-xs hover:bg-gray-100" (click)="compareVersions(version, versionHistory[i + 1]); showVersionMenu = null">
+                    <i class="fas fa-code-compare mr-1"></i> Compare
+                  </button>
+                  <button *ngIf="version.version > 1" class="block w-full px-3 py-1 text-left text-xs text-red-600 hover:bg-red-50" (click)="deleteVersion(version); showVersionMenu = null">
+                    <i class="fas fa-trash mr-1"></i> Delete
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
           <p class="text-sm text-gray-700 mb-2">{{ version.description }}</p>
-          <div class="flex gap-2">
-            <button class="text-xs text-[#6200EE] hover:text-[#5000CC] transition-colors" (click)="viewVersion(version)">
-              <i class="fas fa-eye mr-1"></i> View
+          <div class="text-xs text-gray-500">
+            <div *ngIf="version.changes && version.changes.length > 0" class="flex flex-wrap gap-1">
+              <span *ngFor="let change of version.changes" class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded">
+                {{ change }}
+              </span>
+            </div>
+          </div>
+          <div class="flex gap-2 mt-2">
+            <button class="text-xs text-[#6200EE] hover:text-[#5000CC] transition-colors flex items-center" (click)="viewVersion(version)">
+              <i class="fas fa-eye mr-1"></i> Preview
             </button>
-            <button *ngIf="i > 0" class="text-xs text-[#6200EE] hover:text-[#5000CC] transition-colors" (click)="restoreVersion(version)">
+            <button *ngIf="i > 0" class="text-xs text-[#6200EE] hover:text-[#5000CC] transition-colors flex items-center" (click)="restoreVersion(version)">
               <i class="fas fa-undo mr-1"></i> Restore
             </button>
+            <span class="text-xs text-gray-400">
+              {{ getVersionSize(version) }}
+            </span>
           </div>
+        </div>
+        
+        <!-- Manual Save Button -->
+        <div class="mt-4 pt-4 border-t">
+          <button
+            class="w-full bg-[#6200EE] text-white px-3 py-2 rounded text-sm hover:bg-[#5000CC] transition-colors flex items-center justify-center"
+            (click)="saveManualVersion()">
+            <i class="fas fa-save mr-2"></i>
+            Save Current Version
+          </button>
+          <p class="text-xs text-gray-500 mt-2 text-center">
+            Versions are auto-saved every 30 seconds
+          </p>
         </div>
       </div>
     </div>
